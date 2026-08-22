@@ -1,5 +1,7 @@
 # Generative Audio Browser
 
+**[Live demo](https://Davor111.github.io/generative-audio-browser/)**
+
 An interactive generative audio-visual experience in the browser. Drag animated elements onto a canvas to build evolving soundscapes. Work in progress.
 
 ## How it works
