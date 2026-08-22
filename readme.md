@@ -37,13 +37,13 @@ All audio routes through a shared `Limiter → Reverb` master chain. The DOM (`e
 ## Running locally
 
 ```bash
-npm install
-npm run dev
+yarn install
+yarn dev
 ```
 
 Open `http://localhost:5173`, click **Start Experience**, then drag or click elements from the sidebar onto the canvas.
 
 ```bash
-npm run build    # production bundle → dist/
-npm run preview  # serve the dist/ build locally
+yarn build    # production bundle → dist/
+yarn preview  # serve the dist/ build locally
 ```
