@@ -8,5 +8,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["app.ts", "js/**/*.ts"]
+  "include": ["app.ts", "ts/**/*.ts"]
 }

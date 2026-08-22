@@ -1,6 +1,6 @@
 import * as Tone from 'tone';
-import { DOM, SOUND } from './js/state';
-import { initAudioEngine } from './js/audio-engine';
+import { DOM, SOUND } from './ts/state';
+import { initAudioEngine } from './ts/audio-engine';
 import {
   spawnOrb,
   spawnTimewarp,
@@ -9,8 +9,8 @@ import {
   spawnEtherealWind,
   spawnModulator,
   spawnOrbit,
-} from './js/elements';
-import { resizeConnectionsCanvas, proximityLoop } from './js/proximity';
+} from './ts/elements';
+import { resizeConnectionsCanvas, proximityLoop } from './ts/proximity';
 
 async function startAudio(): Promise<void> {
   await Tone.start();
