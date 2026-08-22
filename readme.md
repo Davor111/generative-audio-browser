@@ -4,6 +4,8 @@
 
 An interactive generative audio-visual experience in the browser. Drag animated elements onto a canvas to build evolving soundscapes. Work in progress.
 
+![Demo](demo.gif)
+
 ## How it works
 
 The canvas holds two categories of element:
