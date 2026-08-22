@@ -45,7 +45,3 @@ Open `http://localhost:5173`, click **Start Experience**, then drag or click ele
 npm run build    # production bundle → dist/
 npm run preview  # serve the dist/ build locally
 ```
-
-## Deploying
-
-The repo includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that builds and deploys to GitHub Pages on every push to `main`. Enable it once in **Settings → Pages → Source → GitHub Actions**.
