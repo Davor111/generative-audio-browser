@@ -10,10 +10,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <script type="module" crossorigin src="/generative-audio-browser/assets/index-URVXVVls.js"></script>
+  <link rel="stylesheet" crossorigin href="/generative-audio-browser/assets/index-CpK6NAaq.css">
 </head>
 
 <body>
+  <!-- Toolbar -->
   <aside id="toolbar">
     <h2>Elements</h2>
     <div class="toolbar-items">
@@ -63,6 +65,8 @@
       <p>Drag or click to place</p>
     </div>
   </aside>
+
+  <!-- Canvas area where elements live -->
   <main id="canvas">
     <!-- SVG filter for bloom effect -->
     <svg id="bloom-svg" xmlns="http://www.w3.org/2000/svg" width="0" height="0" aria-hidden="true">
@@ -83,7 +87,7 @@
 
     <div id="start-overlay">
       <div id="start-overlay-content">
-        <div id="start-icon">࿂</div>
+        <div id="start-icon">◉</div>
         <h1>Generative Audio Browser</h1>
         <p>Create evolving soundscapes with animated visual elements</p>
         <button id="start-btn">▶ Start Experience</button>
@@ -91,7 +95,6 @@
     </div>
   </main>
 
-  <script type="module" src="app.ts"></script>
 </body>
 
 </html>

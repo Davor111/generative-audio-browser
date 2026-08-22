@@ -8,9 +8,9 @@
   --bg-surface-hover: rgba(24, 28, 48, 0.92);
 
   /* Accent palette */
-  --accent-primary: hsl(258, 82%, 62%);
+  --accent-primary: hsl(307, 82%, 62%);
   /* violet */
-  --accent-secondary: hsl(190, 90%, 55%);
+  --accent-secondary: hsl(299, 77%, 88%);
   /* cyan */
   --accent-warm: hsl(32, 95%, 60%);
   /* warm amber */
@@ -484,7 +484,7 @@ body::before {
 }
 
 #start-icon {
-  font-size: 48px;
+  font-size: 88px;
   color: var(--accent-primary);
   margin-bottom: 18px;
   animation: iconPulse 2s ease-in-out infinite;
@@ -509,7 +509,7 @@ body::before {
   font-weight: 600;
   letter-spacing: -0.02em;
   margin-bottom: 8px;
-  background: linear-gradient(135deg, var(--text-primary), var(--accent-secondary));
+  background: var(--accent-secondary);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -528,8 +528,8 @@ body::before {
   gap: 8px;
   padding: 14px 36px;
   border: none;
-  border-radius: 50px;
-  background: linear-gradient(135deg, var(--accent-primary), hsl(280, 70%, 55%));
+  border-radius: 5px;
+  background: linear-gradient(135deg, var(--accent-primary), hsl(341, 70%, 55%));
   color: #fff;
   font-family: inherit;
   font-size: 15px;
@@ -547,7 +547,7 @@ body::before {
 #start-btn:hover {
   transform: scale(1.04);
   box-shadow:
-    0 6px 28px hsla(258, 80%, 50%, 0.5),
+    0 6px 28px hsla(294, 80%, 50%, 0.5),
     0 0 60px hsla(258, 80%, 50%, 0.2);
 }
 

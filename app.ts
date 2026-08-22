@@ -1,0 +1,90 @@
+import * as Tone from 'tone';
+import { DOM, SOUND } from './js/state';
+import { initAudioEngine } from './js/audio-engine';
+import {
+  spawnOrb,
+  spawnTimewarp,
+  spawnDeepPad,
+  spawnWoah,
+  spawnEtherealWind,
+  spawnModulator,
+  spawnOrbit,
+} from './js/elements';
+import { resizeConnectionsCanvas, proximityLoop } from './js/proximity';
+
+async function startAudio(): Promise<void> {
+  await Tone.start();
+  Tone.getDestination().volume.value = -8;
+  initAudioEngine();
+  SOUND.audioReady = true;
+  DOM.startOverlay.classList.add('hidden');
+}
+
+function setupToolbarDrag(btn: HTMLButtonElement, type: string): void {
+  btn.addEventListener('dragstart', (e: DragEvent) => {
+    e.dataTransfer!.setData('text/plain', type);
+    e.dataTransfer!.effectAllowed = 'copy';
+  });
+}
+
+function setupToolbarClick(btn: HTMLButtonElement, spawnFn: (x: number, y: number) => void): void {
+  btn.addEventListener('click', () => {
+    if (!SOUND.audioReady) return;
+    const rect = DOM.canvas.getBoundingClientRect();
+    const pad = 100;
+    const x = pad + Math.random() * (rect.width - pad * 2);
+    const y = pad + Math.random() * (rect.height - pad * 2);
+    spawnFn(x, y);
+  });
+}
+
+resizeConnectionsCanvas();
+window.addEventListener('resize', resizeConnectionsCanvas);
+requestAnimationFrame(proximityLoop);
+
+DOM.startBtn.addEventListener('click', startAudio);
+
+setupToolbarDrag(DOM.toolbarOrbBtn, 'orb');
+setupToolbarDrag(DOM.toolbarTimewarpBtn, 'timewarp');
+setupToolbarDrag(DOM.toolbarDeeppadBtn, 'deeppad');
+setupToolbarDrag(DOM.toolbarWoahBtn, 'woah');
+setupToolbarDrag(DOM.toolbarEtheralwindBtn, 'etheralwind');
+setupToolbarDrag(DOM.toolbarModulatorBtn, 'modulator');
+setupToolbarDrag(DOM.toolbarOrbitBtn, 'orbit');
+
+DOM.canvas.addEventListener('dragover', (e: DragEvent) => {
+  e.preventDefault();
+  e.dataTransfer!.dropEffect = 'copy';
+  DOM.canvas.classList.add('drag-over');
+});
+
+DOM.canvas.addEventListener('dragleave', () => {
+  DOM.canvas.classList.remove('drag-over');
+});
+
+DOM.canvas.addEventListener('drop', (e: DragEvent) => {
+  e.preventDefault();
+  DOM.canvas.classList.remove('drag-over');
+  if (!SOUND.audioReady) return;
+
+  const type = e.dataTransfer!.getData('text/plain');
+  const canvasRect = DOM.canvas.getBoundingClientRect();
+  const x = e.clientX - canvasRect.left;
+  const y = e.clientY - canvasRect.top;
+
+  if (type === 'orb') spawnOrb(x, y);
+  if (type === 'timewarp') spawnTimewarp(x, y);
+  if (type === 'deeppad') spawnDeepPad(x, y);
+  if (type === 'woah') spawnWoah(x, y);
+  if (type === 'etheralwind') spawnEtherealWind(x, y);
+  if (type === 'modulator') spawnModulator(x, y);
+  if (type === 'orbit') spawnOrbit(x, y);
+});
+
+setupToolbarClick(DOM.toolbarOrbBtn, spawnOrb);
+setupToolbarClick(DOM.toolbarTimewarpBtn, spawnTimewarp);
+setupToolbarClick(DOM.toolbarDeeppadBtn, spawnDeepPad);
+setupToolbarClick(DOM.toolbarWoahBtn, spawnWoah);
+setupToolbarClick(DOM.toolbarEtheralwindBtn, spawnEtherealWind);
+setupToolbarClick(DOM.toolbarModulatorBtn, spawnModulator);
+setupToolbarClick(DOM.toolbarOrbitBtn, spawnOrbit);
