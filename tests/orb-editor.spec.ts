@@ -21,6 +21,16 @@ test('right-clicking an orb opens the edit dialog pre-filled with its current va
   await expect(page.locator('#orb-edit-waveform')).toHaveValue('sine');
   await expect(page.locator('#orb-edit-note-duration')).toHaveValue('8n');
   await expect(page.locator('#orb-edit-note-interval-value')).toHaveText('500ms');
+  await expect(page.locator('#orb-edit-volume-value')).toHaveText('100%');
+});
+
+test('changing the volume updates the live display', async ({ page }) => {
+  const orb = page.locator('.orb-element');
+  await orb.click({ button: 'right' });
+
+  await page.locator('#orb-edit-volume').fill('0.3');
+  await page.locator('#orb-edit-volume').dispatchEvent('input');
+  await expect(page.locator('#orb-edit-volume-value')).toHaveText('30%');
 });
 
 test('changing the waveform and note interval updates the live display', async ({ page }) => {
