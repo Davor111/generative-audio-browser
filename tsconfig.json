@@ -4,9 +4,16 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
-    "lib": ["ES2020", "DOM"],
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src/app.ts", "src/ts/**/*.ts"]
+  "include": [
+    "src/app.ts",
+    "src/ts/**/*.ts",
+    "src/types.d.ts"
+  ]
 }

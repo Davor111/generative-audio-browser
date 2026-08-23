@@ -1,6 +1,6 @@
 import { DOM, SOUND } from './state';
 import { getCenter, distance, type Point } from './utils';
-import type { SoundSource, OrbitableElement } from './types';
+import type { SoundSource, OrbitableElement } from '../types';
 
 export function resizeConnectionsCanvas(): void {
   const rect = DOM.canvas.getBoundingClientRect();

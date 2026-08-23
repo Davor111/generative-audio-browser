@@ -18,7 +18,7 @@ import type {
   ModulatorState,
   OrbitState,
   WoahSource,
-} from './types';
+} from '../types';
 
 export function registerSourceToWoah(source: WoahSource, woah: WoahState): void {
   if (!source.woahSends.has(woah)) {

@@ -1,5 +1,5 @@
 import { DOM } from './state';
-import type { OrbState } from './types';
+import type { OrbState } from '../types';
 
 let currentOrb: OrbState | null = null;
 

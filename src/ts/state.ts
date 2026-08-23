@@ -1,4 +1,4 @@
-import type { SoundState } from './types';
+import type { SoundState } from '../types';
 
 export const DOM = {
   canvas: document.getElementById('canvas') as HTMLElement,
