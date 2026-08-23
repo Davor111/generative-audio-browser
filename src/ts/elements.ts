@@ -9,6 +9,7 @@ import {
 } from './audio-engine';
 import { makeDraggable } from './utils';
 import { bindOrbContextMenu } from './orb-editor';
+import { bindPadContextMenu } from './pad-editor';
 import type {
   OrbState,
   DeepPadState,
@@ -168,6 +169,11 @@ export function spawnDeepPad(x: number, y: number): DeepPadState {
 
   DOM.container.appendChild(el);
 
+  const editHint = document.createElement('span');
+  editHint.classList.add('dp-edit-hint');
+  editHint.textContent = 'right click to edit';
+  el.appendChild(editHint);
+
   el.addEventListener('animationend', function onSpawn(e: AnimationEvent) {
     if (e.animationName === 'dpSpawnIn') {
       el.classList.add('deeppad-breathing');
@@ -188,6 +194,7 @@ export function spawnDeepPad(x: number, y: number): DeepPadState {
     outputNode,
     baseFreq,
     noteIdx,
+    noteIntervalMs: MUSIC.DEEPPAD_INTERVAL_MS,
     warped: false,
     woahAffected: false,
     modAffected: false,
@@ -200,7 +207,7 @@ export function spawnDeepPad(x: number, y: number): DeepPadState {
   }
 
   function scheduleNextPadNote(): void {
-    let interval = MUSIC.DEEPPAD_INTERVAL_MS;
+    let interval = dp.noteIntervalMs;
     if (dp.warped) {
       interval = 900 + Math.random() * 700;
       synth.portamento = 0.35;
@@ -224,6 +231,7 @@ export function spawnDeepPad(x: number, y: number): DeepPadState {
   scheduleNextPadNote();
 
   makeDraggable(el, { onErase: () => removeDeepPad(dp) });
+  bindPadContextMenu(dp);
 
   SOUND.deeppads.push(dp);
   return dp;

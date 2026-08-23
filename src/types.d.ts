@@ -34,6 +34,7 @@ export interface DeepPadState {
   outputNode: Gain;
   baseFreq: number;
   noteIdx: number;
+  noteIntervalMs: number;
   warped: boolean;
   woahAffected: boolean;
   modAffected: boolean;

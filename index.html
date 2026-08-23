@@ -148,6 +148,62 @@
               id="orb-edit-note-interval-value"></span></span>
           <input type="range" id="orb-edit-note-interval" min="100" max="2000" step="50" />
         </label>
+
+        <label class="orb-edit-field">
+          <span class="orb-edit-label">Volume <span class="orb-edit-value" id="orb-edit-volume-value"></span></span>
+          <input type="range" id="orb-edit-volume" min="0" max="1.2" step="0.01" />
+        </label>
+      </form>
+    </dialog>
+
+    <dialog id="pad-edit-dialog">
+      <form id="pad-edit-form" method="dialog">
+        <div class="pad-edit-header">
+          <h2>Edit Deep Pad</h2>
+          <button type="button" id="pad-edit-close" aria-label="Close">&times;</button>
+        </div>
+
+        <label class="pad-edit-field">
+          <span class="pad-edit-label">Waveform</span>
+          <select id="pad-edit-waveform">
+            <option value="sine">Sine</option>
+            <option value="triangle">Triangle</option>
+            <option value="square">Square</option>
+            <option value="sawtooth">Sawtooth</option>
+            <option value="fatsawtooth">Fat Sawtooth</option>
+          </select>
+        </label>
+
+        <label class="pad-edit-field">
+          <span class="pad-edit-label">Attack <span class="pad-edit-value" id="pad-edit-attack-value"></span></span>
+          <input type="range" id="pad-edit-attack" min="0.05" max="4" step="0.05" />
+        </label>
+
+        <label class="pad-edit-field">
+          <span class="pad-edit-label">Decay <span class="pad-edit-value" id="pad-edit-decay-value"></span></span>
+          <input type="range" id="pad-edit-decay" min="0.05" max="4" step="0.05" />
+        </label>
+
+        <label class="pad-edit-field">
+          <span class="pad-edit-label">Sustain <span class="pad-edit-value" id="pad-edit-sustain-value"></span></span>
+          <input type="range" id="pad-edit-sustain" min="0" max="1" step="0.01" />
+        </label>
+
+        <label class="pad-edit-field">
+          <span class="pad-edit-label">Release <span class="pad-edit-value" id="pad-edit-release-value"></span></span>
+          <input type="range" id="pad-edit-release" min="0.05" max="6" step="0.05" />
+        </label>
+
+        <label class="pad-edit-field">
+          <span class="pad-edit-label">Note Interval <span class="pad-edit-value"
+              id="pad-edit-note-interval-value"></span></span>
+          <input type="range" id="pad-edit-note-interval" min="1000" max="10000" step="250" />
+        </label>
+
+        <label class="pad-edit-field">
+          <span class="pad-edit-label">Volume <span class="pad-edit-value" id="pad-edit-volume-value"></span></span>
+          <input type="range" id="pad-edit-volume" min="0" max="1.2" step="0.01" />
+        </label>
       </form>
     </dialog>
   </main>

@@ -9,6 +9,7 @@ function refreshValueLabels(): void {
   DOM.orbEditSustainValue.textContent = Number(DOM.orbEditSustain.value).toFixed(2);
   DOM.orbEditReleaseValue.textContent = `${Number(DOM.orbEditRelease.value).toFixed(2)}s`;
   DOM.orbEditNoteIntervalValue.textContent = `${DOM.orbEditNoteInterval.value}ms`;
+  DOM.orbEditVolumeValue.textContent = `${Math.round(Number(DOM.orbEditVolume.value) * 100)}%`;
 }
 
 function applyFieldsToOrb(): void {
@@ -21,6 +22,7 @@ function applyFieldsToOrb(): void {
   currentOrb.synth.envelope.release = Number(DOM.orbEditRelease.value);
   currentOrb.noteDuration = DOM.orbEditNoteDuration.value;
   currentOrb.noteIntervalMs = Number(DOM.orbEditNoteInterval.value);
+  currentOrb.outputNode.gain.value = Number(DOM.orbEditVolume.value);
 
   refreshValueLabels();
 }
@@ -35,6 +37,7 @@ export function openOrbEditor(orb: OrbState): void {
   DOM.orbEditRelease.value = String(orb.synth.envelope.release);
   DOM.orbEditNoteDuration.value = orb.noteDuration;
   DOM.orbEditNoteInterval.value = String(orb.noteIntervalMs);
+  DOM.orbEditVolume.value = String(orb.outputNode.gain.value);
 
   refreshValueLabels();
   DOM.orbEditDialog.showModal();
