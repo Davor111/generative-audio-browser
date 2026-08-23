@@ -2,6 +2,27 @@ import { DOM, SOUND } from './state';
 import { getCenter, distance, type Point } from './utils';
 import type { SoundSource, OrbitableElement } from '../types';
 
+interface RampableParam {
+  rampTo(target: number, rampTime: number): unknown;
+}
+
+const lastRampTarget = new WeakMap<RampableParam, number>();
+
+/**
+ * Re-issuing an identical (or barely-changed) rampTo() target every animation
+ * frame forever — as happens whenever a param sits at its "idle" resting
+ * value — has been observed to eventually corrupt the Web Audio graph in
+ * Chromium (surfacing as permanent silence) once combined with a connected
+ * synth's own envelope automation. Skipping redundant re-scheduling avoids
+ * the pattern entirely without changing any audible behavior.
+ */
+function rampToIfChanged(param: RampableParam, target: number, rampTime: number, epsilon = 0.001): void {
+  const last = lastRampTarget.get(param);
+  if (last !== undefined && Math.abs(last - target) < epsilon) return;
+  param.rampTo(target, rampTime);
+  lastRampTarget.set(param, target);
+}
+
 export function resizeConnectionsCanvas(): void {
   const rect = DOM.canvas.getBoundingClientRect();
   DOM.connectionsCanvas.width = rect.width * devicePixelRatio;
@@ -160,9 +181,9 @@ export function proximityLoop(): void {
 
   for (const woah of SOUND.woahs) {
     if (woah.warped) {
-      woah.fx.delay.delayTime.rampTo(0.11, 0.12);
+      rampToIfChanged(woah.fx.delay.delayTime, 0.11, 0.12);
     } else {
-      woah.fx.delay.delayTime.rampTo(0.375, 0.2);
+      rampToIfChanged(woah.fx.delay.delayTime, 0.375, 0.2);
     }
     woah.el.classList.toggle('warped', woah.warped);
   }
@@ -183,9 +204,9 @@ export function proximityLoop(): void {
 
     if (maxMod > 0) {
       orb.modAffected = true;
-      orb.distortion.wet.rampTo(maxMod * 0.85, 0.06);
+      rampToIfChanged(orb.distortion.wet, maxMod * 0.85, 0.06);
     } else {
-      orb.distortion.wet.rampTo(0, 0.1);
+      rampToIfChanged(orb.distortion.wet, 0, 0.1);
     }
   }
 
@@ -205,11 +226,11 @@ export function proximityLoop(): void {
 
     if (maxMod > 0) {
       dp.modAffected = true;
-      dp.distortion.wet.rampTo(maxMod * 0.8, 0.06);
-      dp.filter.frequency.rampTo(dp.baseFreq + maxMod * 1200, 0.06);
+      rampToIfChanged(dp.distortion.wet, maxMod * 0.8, 0.06);
+      rampToIfChanged(dp.filter.frequency, dp.baseFreq + maxMod * 1200, 0.06, 1);
     } else {
-      dp.distortion.wet.rampTo(0, 0.1);
-      dp.filter.frequency.rampTo(dp.baseFreq, 0.15);
+      rampToIfChanged(dp.distortion.wet, 0, 0.1);
+      rampToIfChanged(dp.filter.frequency, dp.baseFreq, 0.15, 1);
     }
   }
 
@@ -234,7 +255,7 @@ export function proximityLoop(): void {
         const targetGain = Math.min(1.0, closeness * 1.2);
 
         if (sendGainNode) {
-          sendGainNode.gain.rampTo(targetGain, 0.05);
+          rampToIfChanged(sendGainNode.gain, targetGain, 0.05);
         }
 
         DOM.ctx.save();
@@ -251,7 +272,7 @@ export function proximityLoop(): void {
         DOM.ctx.fill();
         DOM.ctx.restore();
       } else if (sendGainNode) {
-        sendGainNode.gain.rampTo(0, 0.08);
+        rampToIfChanged(sendGainNode.gain, 0, 0.08);
       }
     }
   }
