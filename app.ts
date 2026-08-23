@@ -11,6 +11,14 @@ import {
   spawnOrbit,
 } from './ts/elements';
 import { resizeConnectionsCanvas, proximityLoop } from './ts/proximity';
+import { initOrbEditor } from './ts/orb-editor';
+import {
+  createOrbSynth,
+  createDeepPadSynth,
+  createWoahFX,
+  createEtherealWindSound,
+  walkNote,
+} from './ts/audio-engine';
 
 async function startAudio(): Promise<void> {
   await Tone.start();
@@ -18,6 +26,8 @@ async function startAudio(): Promise<void> {
   initAudioEngine();
   SOUND.audioReady = true;
   DOM.startOverlay.classList.add('hidden');
+  const { synth, distortion, outputNode } = createOrbSynth();
+
 }
 
 function setupToolbarDrag(btn: HTMLButtonElement, type: string): void {
@@ -41,16 +51,9 @@ function setupToolbarClick(btn: HTMLButtonElement, spawnFn: (x: number, y: numbe
 resizeConnectionsCanvas();
 window.addEventListener('resize', resizeConnectionsCanvas);
 requestAnimationFrame(proximityLoop);
+initOrbEditor();
 
 DOM.startBtn.addEventListener('click', startAudio);
-
-setupToolbarDrag(DOM.toolbarOrbBtn, 'orb');
-setupToolbarDrag(DOM.toolbarTimewarpBtn, 'timewarp');
-setupToolbarDrag(DOM.toolbarDeeppadBtn, 'deeppad');
-setupToolbarDrag(DOM.toolbarWoahBtn, 'woah');
-setupToolbarDrag(DOM.toolbarEtheralwindBtn, 'etheralwind');
-setupToolbarDrag(DOM.toolbarModulatorBtn, 'modulator');
-setupToolbarDrag(DOM.toolbarOrbitBtn, 'orbit');
 
 DOM.canvas.addEventListener('dragover', (e: DragEvent) => {
   e.preventDefault();
@@ -72,14 +75,39 @@ DOM.canvas.addEventListener('drop', (e: DragEvent) => {
   const x = e.clientX - canvasRect.left;
   const y = e.clientY - canvasRect.top;
 
-  if (type === 'orb') spawnOrb(x, y);
-  if (type === 'timewarp') spawnTimewarp(x, y);
-  if (type === 'deeppad') spawnDeepPad(x, y);
-  if (type === 'woah') spawnWoah(x, y);
-  if (type === 'etheralwind') spawnEtherealWind(x, y);
-  if (type === 'modulator') spawnModulator(x, y);
-  if (type === 'orbit') spawnOrbit(x, y);
+  switch (type) {
+    case 'orb':
+      spawnOrb(x, y);
+      break;
+    case 'timewarp':
+      spawnTimewarp(x, y);
+      break;
+    case 'deeppad':
+      spawnDeepPad(x, y);
+      break;
+    case 'woah':
+      spawnWoah(x, y);
+      break;
+    case 'etheralwind':
+      spawnEtherealWind(x, y);
+      break;
+    case 'modulator':
+      spawnModulator(x, y);
+      break;
+    case 'orbit':
+      spawnOrbit(x, y);
+      break;
+  }
+
 });
+
+setupToolbarDrag(DOM.toolbarOrbBtn, 'orb');
+setupToolbarDrag(DOM.toolbarTimewarpBtn, 'timewarp');
+setupToolbarDrag(DOM.toolbarDeeppadBtn, 'deeppad');
+setupToolbarDrag(DOM.toolbarWoahBtn, 'woah');
+setupToolbarDrag(DOM.toolbarEtheralwindBtn, 'etheralwind');
+setupToolbarDrag(DOM.toolbarModulatorBtn, 'modulator');
+setupToolbarDrag(DOM.toolbarOrbitBtn, 'orbit');
 
 setupToolbarClick(DOM.toolbarOrbBtn, spawnOrb);
 setupToolbarClick(DOM.toolbarTimewarpBtn, spawnTimewarp);

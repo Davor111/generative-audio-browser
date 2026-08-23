@@ -17,6 +17,8 @@ export interface OrbState {
   distortion: Distortion;
   outputNode: Gain;
   noteIdx: number;
+  noteDuration: string;
+  noteIntervalMs: number;
   warped: boolean;
   woahAffected: boolean;
   modAffected: boolean;

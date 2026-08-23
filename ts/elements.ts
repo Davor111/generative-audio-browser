@@ -8,6 +8,7 @@ import {
   walkNote,
 } from './audio-engine';
 import { makeDraggable } from './utils';
+import { bindOrbContextMenu } from './orb-editor';
 import type {
   OrbState,
   DeepPadState,
@@ -43,6 +44,11 @@ export function spawnOrb(x: number, y: number): OrbState {
 
   DOM.container.appendChild(el);
 
+  const editHint = document.createElement('span');
+  editHint.classList.add('orb-edit-hint');
+  editHint.textContent = 'right click to edit';
+  el.appendChild(editHint);
+
   el.addEventListener('animationend', function onSpawn(e: AnimationEvent) {
     if (e.animationName === 'orbSpawnIn') {
       el.classList.add('orb-breathing');
@@ -59,6 +65,8 @@ export function spawnOrb(x: number, y: number): OrbState {
     distortion,
     outputNode,
     noteIdx,
+    noteDuration: '8n',
+    noteIntervalMs: MUSIC.NOTE_INTERVAL_MS,
     warped: false,
     woahAffected: false,
     modAffected: false,
@@ -71,14 +79,14 @@ export function spawnOrb(x: number, y: number): OrbState {
   }
 
   function scheduleNextNote(): void {
-    let interval = MUSIC.NOTE_INTERVAL_MS;
+    let interval = orb.noteIntervalMs;
     if (orb.warped) {
       interval = 150 + Math.random() * 700;
     }
 
     orb.timerId = setTimeout(() => {
       orb.noteIdx = walkNote(orb.noteIdx, MUSIC.NOTES);
-      synth.triggerAttackRelease(MUSIC.NOTES[orb.noteIdx], '8n');
+      synth.triggerAttackRelease(MUSIC.NOTES[orb.noteIdx], orb.noteDuration);
 
       el.classList.remove('note-pulse');
       void el.offsetWidth;
@@ -90,6 +98,7 @@ export function spawnOrb(x: number, y: number): OrbState {
   scheduleNextNote();
 
   makeDraggable(el);
+  bindOrbContextMenu(orb);
 
   SOUND.orbs.push(orb);
   return orb;

@@ -14,6 +14,21 @@ export const DOM = {
   toolbarOrbitBtn: document.getElementById('toolbar-orbit') as HTMLButtonElement,
   connectionsCanvas: document.getElementById('connections-canvas') as HTMLCanvasElement,
   ctx: (document.getElementById('connections-canvas') as HTMLCanvasElement).getContext('2d')!,
+  orbEditDialog: document.getElementById('orb-edit-dialog') as HTMLDialogElement,
+  orbEditForm: document.getElementById('orb-edit-form') as HTMLFormElement,
+  orbEditClose: document.getElementById('orb-edit-close') as HTMLButtonElement,
+  orbEditWaveform: document.getElementById('orb-edit-waveform') as HTMLSelectElement,
+  orbEditAttack: document.getElementById('orb-edit-attack') as HTMLInputElement,
+  orbEditDecay: document.getElementById('orb-edit-decay') as HTMLInputElement,
+  orbEditSustain: document.getElementById('orb-edit-sustain') as HTMLInputElement,
+  orbEditRelease: document.getElementById('orb-edit-release') as HTMLInputElement,
+  orbEditNoteDuration: document.getElementById('orb-edit-note-duration') as HTMLSelectElement,
+  orbEditNoteInterval: document.getElementById('orb-edit-note-interval') as HTMLInputElement,
+  orbEditAttackValue: document.getElementById('orb-edit-attack-value') as HTMLSpanElement,
+  orbEditDecayValue: document.getElementById('orb-edit-decay-value') as HTMLSpanElement,
+  orbEditSustainValue: document.getElementById('orb-edit-sustain-value') as HTMLSpanElement,
+  orbEditReleaseValue: document.getElementById('orb-edit-release-value') as HTMLSpanElement,
+  orbEditNoteIntervalValue: document.getElementById('orb-edit-note-interval-value') as HTMLSpanElement,
 };
 
 export const SOUND: SoundState = {

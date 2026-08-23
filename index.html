@@ -90,6 +90,62 @@
         <button id="start-btn">▶ Start Experience</button>
       </div>
     </div>
+
+    <dialog id="orb-edit-dialog">
+      <form id="orb-edit-form" method="dialog">
+        <div class="orb-edit-header">
+          <h2>Edit Orb</h2>
+          <button type="button" id="orb-edit-close" aria-label="Close">&times;</button>
+        </div>
+
+        <label class="orb-edit-field">
+          <span class="orb-edit-label">Waveform</span>
+          <select id="orb-edit-waveform">
+            <option value="sine">Sine</option>
+            <option value="triangle">Triangle</option>
+            <option value="square">Square</option>
+            <option value="sawtooth">Sawtooth</option>
+          </select>
+        </label>
+
+        <label class="orb-edit-field">
+          <span class="orb-edit-label">Attack <span class="orb-edit-value" id="orb-edit-attack-value"></span></span>
+          <input type="range" id="orb-edit-attack" min="0.01" max="2" step="0.01" />
+        </label>
+
+        <label class="orb-edit-field">
+          <span class="orb-edit-label">Decay <span class="orb-edit-value" id="orb-edit-decay-value"></span></span>
+          <input type="range" id="orb-edit-decay" min="0.01" max="2" step="0.01" />
+        </label>
+
+        <label class="orb-edit-field">
+          <span class="orb-edit-label">Sustain <span class="orb-edit-value" id="orb-edit-sustain-value"></span></span>
+          <input type="range" id="orb-edit-sustain" min="0" max="1" step="0.01" />
+        </label>
+
+        <label class="orb-edit-field">
+          <span class="orb-edit-label">Release <span class="orb-edit-value" id="orb-edit-release-value"></span></span>
+          <input type="range" id="orb-edit-release" min="0.01" max="4" step="0.01" />
+        </label>
+
+        <label class="orb-edit-field">
+          <span class="orb-edit-label">Note Length</span>
+          <select id="orb-edit-note-duration">
+            <option value="16n">1/16</option>
+            <option value="8n">1/8</option>
+            <option value="4n">1/4</option>
+            <option value="2n">1/2</option>
+            <option value="1n">1/1</option>
+          </select>
+        </label>
+
+        <label class="orb-edit-field">
+          <span class="orb-edit-label">Note Interval <span class="orb-edit-value"
+              id="orb-edit-note-interval-value"></span></span>
+          <input type="range" id="orb-edit-note-interval" min="100" max="2000" step="50" />
+        </label>
+      </form>
+    </dialog>
   </main>
 
   <script type="module" src="app.ts"></script>
