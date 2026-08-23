@@ -4,6 +4,8 @@
 
 An interactive generative audio-visual experience in the browser. Drag animated elements onto a canvas to build evolving soundscapes. Work in progress.
 
+DISCLAIMER: This project also serves as a playground for me to test out AI workflows and (local) LLMs.
+
 ![Demo](demo.gif)
 
 ## How it works
