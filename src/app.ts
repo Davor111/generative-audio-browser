@@ -13,6 +13,7 @@ import {
 import { resizeConnectionsCanvas, proximityLoop } from './ts/proximity';
 import { initOrbEditor } from './ts/orb-editor';
 import { initPadEditor } from './ts/pad-editor';
+import { initWindEditor } from './ts/wind-editor';
 
 async function startAudio(): Promise<void> {
   await Tone.start();
@@ -45,6 +46,7 @@ window.addEventListener('resize', resizeConnectionsCanvas);
 requestAnimationFrame(proximityLoop);
 initOrbEditor();
 initPadEditor();
+initWindEditor();
 
 DOM.startBtn.addEventListener('click', startAudio);
 
