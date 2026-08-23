@@ -2,6 +2,8 @@ CLAUDE.md
 node_modules/
 dist/
 .playwright-mcp/
+playwright-report/
+test-results/
 .pnp.*
 .yarn/*
 !.yarn/patches

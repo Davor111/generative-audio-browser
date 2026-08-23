@@ -14,6 +14,8 @@
   "include": [
     "src/app.ts",
     "src/ts/**/*.ts",
-    "src/types.d.ts"
+    "src/types.d.ts",
+    "tests/**/*.ts",
+    "playwright.config.ts"
   ]
 }
