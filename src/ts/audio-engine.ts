@@ -2,8 +2,8 @@ import {
   Reverb,
   Limiter,
   Synth,
-  Distortion,
   Gain,
+  WaveShaper,
   Filter,
   PingPongDelay,
   AutoFilter,
@@ -18,6 +18,67 @@ export function initAudioEngine(): void {
   SOUND.limiter = new Limiter(-3).connect(reverb);
 }
 
+export interface SimpleDistortion {
+  input: Gain;
+  output: Gain;
+  wet: { value: number; rampTo(target: number, rampTime: number): void };
+  dispose(): void;
+}
+
+/**
+ * A hand-rolled WaveShaper distortion with a plain-Gain dry/wet mix — same
+ * curve math as Tone.Distortion, but without Tone's Effect/CrossFade base
+ * class (which internally mixes via a StereoPannerNode + ChannelSplitter).
+ * That CrossFade machinery — at ANY wet value, even fully dry or fully wet,
+ * with or without automation — reliably corrupts Chromium's Web Audio graph
+ * into permanent silence once paired with a synth that repeatedly retriggers
+ * its own envelope (i.e. any of this app's note-scheduling loops). A plain
+ * two-Gain dry/wet mix does not exhibit the bug.
+ */
+function createDistortion(amount: number, initialWet: number): SimpleDistortion {
+  const k = amount * 100;
+  const deg = Math.PI / 180;
+  const shaper = new WaveShaper((x: number) => {
+    if (Math.abs(x) < 0.001) return 0;
+    return ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+  }, 4096);
+
+  const input = new Gain(1);
+  const dryGain = new Gain(1 - initialWet);
+  const wetGain = new Gain(initialWet);
+  const output = new Gain(1);
+
+  input.connect(dryGain);
+  dryGain.connect(output);
+  input.connect(shaper);
+  shaper.connect(wetGain);
+  wetGain.connect(output);
+
+  let currentWet = initialWet;
+
+  return {
+    input,
+    output,
+    wet: {
+      get value() {
+        return currentWet;
+      },
+      rampTo(target: number, rampTime: number) {
+        currentWet = target;
+        wetGain.gain.rampTo(target, rampTime);
+        dryGain.gain.rampTo(1 - target, rampTime);
+      },
+    },
+    dispose() {
+      shaper.dispose();
+      input.dispose();
+      dryGain.dispose();
+      wetGain.dispose();
+      output.dispose();
+    },
+  };
+}
+
 export function createOrbSynth() {
   const detune = (Math.random() - 0.5) * 20;
   const synth = new Synth({
@@ -26,10 +87,10 @@ export function createOrbSynth() {
   });
   synth.detune.value = detune;
 
-  const distortion = new Distortion({ distortion: 0.45, wet: 0.0 });
+  const distortion = createDistortion(0.45, 0.0);
   const outputNode = new Gain(1).connect(SOUND.limiter!);
-  synth.connect(distortion);
-  distortion.connect(outputNode);
+  synth.connect(distortion.input);
+  distortion.output.connect(outputNode);
 
   return { synth, distortion, outputNode };
 }
@@ -46,10 +107,10 @@ export function createDeepPadSynth() {
 
   synth.volume.value = -6;
 
-  const distortion = new Distortion({ distortion: 0.35, wet: 0.0 });
+  const distortion = createDistortion(0.35, 0.0);
   const outputNode = new Gain(1).connect(SOUND.limiter!);
-  filter.connect(distortion);
-  distortion.connect(outputNode);
+  filter.connect(distortion.input);
+  distortion.output.connect(outputNode);
 
   return { synth, filter, distortion, outputNode, baseFreq };
 }

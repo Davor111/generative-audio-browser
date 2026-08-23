@@ -2,7 +2,6 @@ import type {
   Synth,
   Reverb,
   Limiter,
-  Distortion,
   Gain,
   Filter,
   PingPongDelay,
@@ -10,11 +9,12 @@ import type {
   AutoPanner,
   Noise,
 } from 'tone';
+import type { SimpleDistortion } from './ts/audio-engine';
 
 export interface OrbState {
   el: HTMLDivElement;
   synth: Synth;
-  distortion: Distortion;
+  distortion: SimpleDistortion;
   outputNode: Gain;
   noteIdx: number;
   noteDuration: string;
@@ -30,7 +30,7 @@ export interface DeepPadState {
   el: HTMLDivElement;
   synth: Synth;
   filter: Filter;
-  distortion: Distortion;
+  distortion: SimpleDistortion;
   outputNode: Gain;
   baseFreq: number;
   noteIdx: number;
