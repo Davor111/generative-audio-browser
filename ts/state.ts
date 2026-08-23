@@ -29,6 +29,7 @@ export const DOM = {
   orbEditSustainValue: document.getElementById('orb-edit-sustain-value') as HTMLSpanElement,
   orbEditReleaseValue: document.getElementById('orb-edit-release-value') as HTMLSpanElement,
   orbEditNoteIntervalValue: document.getElementById('orb-edit-note-interval-value') as HTMLSpanElement,
+  eraseZone: document.getElementById('erase-zone') as HTMLElement,
 };
 
 export const SOUND: SoundState = {

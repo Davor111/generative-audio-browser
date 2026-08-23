@@ -21,12 +21,21 @@ export function distance(a: Point, b: Point): number {
 interface DraggableOptions {
   onDragStart?: () => void;
   onDragEnd?: () => void;
+  onErase?: () => void;
 }
 
-export function makeDraggable(el: HTMLElement, { onDragStart, onDragEnd }: DraggableOptions = {}): void {
+function isOverEraseZone(clientX: number, clientY: number): boolean {
+  const rect = DOM.eraseZone.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  return distance({ x: clientX, y: clientY }, { x: cx, y: cy }) <= rect.width / 2;
+}
+
+export function makeDraggable(el: HTMLElement, { onDragStart, onDragEnd, onErase }: DraggableOptions = {}): void {
   let dragging = false;
   let offsetX = 0;
   let offsetY = 0;
+  let overEraseZone = false;
 
   el.addEventListener('pointerdown', (e: PointerEvent) => {
     if (e.button !== 0) return;
@@ -41,6 +50,8 @@ export function makeDraggable(el: HTMLElement, { onDragStart, onDragEnd }: Dragg
     offsetX = (e.clientX - canvasRect.left) - currentX;
     offsetY = (e.clientY - canvasRect.top) - currentY;
 
+    DOM.eraseZone.classList.add('visible');
+
     if (onDragStart) onDragStart();
   });
 
@@ -54,6 +65,9 @@ export function makeDraggable(el: HTMLElement, { onDragStart, onDragEnd }: Dragg
     newY = Math.max(30, Math.min(canvasRect.height - 30, newY));
     el.style.left = `${newX}px`;
     el.style.top = `${newY}px`;
+
+    overEraseZone = isOverEraseZone(e.clientX, e.clientY);
+    DOM.eraseZone.classList.toggle('armed', overEraseZone);
   });
 
   const stop = (e: PointerEvent) => {
@@ -63,6 +77,17 @@ export function makeDraggable(el: HTMLElement, { onDragStart, onDragEnd }: Dragg
     if (e && e.pointerId && el.hasPointerCapture(e.pointerId)) {
       el.releasePointerCapture(e.pointerId);
     }
+
+    DOM.eraseZone.classList.remove('visible', 'armed');
+
+    const shouldErase = overEraseZone;
+    overEraseZone = false;
+
+    if (shouldErase && onErase) {
+      onErase();
+      return;
+    }
+
     if (onDragEnd) onDragEnd();
   };
 

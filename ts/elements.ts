@@ -97,11 +97,22 @@ export function spawnOrb(x: number, y: number): OrbState {
   }
   scheduleNextNote();
 
-  makeDraggable(el);
+  makeDraggable(el, { onErase: () => removeOrb(orb) });
   bindOrbContextMenu(orb);
 
   SOUND.orbs.push(orb);
   return orb;
+}
+
+export function removeOrb(orb: OrbState): void {
+  if (orb.timerId !== null) clearTimeout(orb.timerId);
+  for (const gain of orb.woahSends.values()) gain.dispose();
+  orb.synth.dispose();
+  orb.distortion.dispose();
+  orb.outputNode.dispose();
+  orb.el.remove();
+  const idx = SOUND.orbs.indexOf(orb);
+  if (idx !== -1) SOUND.orbs.splice(idx, 1);
 }
 
 export function spawnTimewarp(x: number, y: number): TimewarpState {
@@ -130,11 +141,16 @@ export function spawnTimewarp(x: number, y: number): TimewarpState {
     }
   });
 
-  makeDraggable(el);
-
   const tw: TimewarpState = { el, radius: MUSIC.TIMEWARP_RADIUS };
+  makeDraggable(el, { onErase: () => removeTimewarp(tw) });
   SOUND.timewarps.push(tw);
   return tw;
+}
+
+export function removeTimewarp(tw: TimewarpState): void {
+  tw.el.remove();
+  const idx = SOUND.timewarps.indexOf(tw);
+  if (idx !== -1) SOUND.timewarps.splice(idx, 1);
 }
 
 export function spawnDeepPad(x: number, y: number): DeepPadState {
@@ -207,10 +223,22 @@ export function spawnDeepPad(x: number, y: number): DeepPadState {
   }
   scheduleNextPadNote();
 
-  makeDraggable(el);
+  makeDraggable(el, { onErase: () => removeDeepPad(dp) });
 
   SOUND.deeppads.push(dp);
   return dp;
+}
+
+export function removeDeepPad(dp: DeepPadState): void {
+  if (dp.timerId !== null) clearTimeout(dp.timerId);
+  for (const gain of dp.woahSends.values()) gain.dispose();
+  dp.synth.dispose();
+  dp.filter.dispose();
+  dp.distortion.dispose();
+  dp.outputNode.dispose();
+  dp.el.remove();
+  const idx = SOUND.deeppads.indexOf(dp);
+  if (idx !== -1) SOUND.deeppads.splice(idx, 1);
 }
 
 export function spawnWoah(x: number, y: number): WoahState {
@@ -242,10 +270,9 @@ export function spawnWoah(x: number, y: number): WoahState {
     }
   });
 
-  makeDraggable(el);
-
   const fx = createWoahFX();
   const woah: WoahState = { el, radius: MUSIC.WOAH_RADIUS, fx, warped: false };
+  makeDraggable(el, { onErase: () => removeWoah(woah) });
 
   for (const orb of SOUND.orbs) registerSourceToWoah(orb, woah);
   for (const dp of SOUND.deeppads) registerSourceToWoah(dp, woah);
@@ -253,6 +280,24 @@ export function spawnWoah(x: number, y: number): WoahState {
 
   SOUND.woahs.push(woah);
   return woah;
+}
+
+export function removeWoah(woah: WoahState): void {
+  const sources: WoahSource[] = [...SOUND.orbs, ...SOUND.deeppads, ...SOUND.etheralwinds];
+  for (const source of sources) {
+    const gain = source.woahSends.get(woah);
+    if (gain) {
+      gain.dispose();
+      source.woahSends.delete(woah);
+    }
+  }
+  woah.fx.inputGain.dispose();
+  woah.fx.delay.dispose();
+  woah.fx.delayFilter.dispose();
+  woah.fx.spaceReverb.dispose();
+  woah.el.remove();
+  const idx = SOUND.woahs.indexOf(woah);
+  if (idx !== -1) SOUND.woahs.splice(idx, 1);
 }
 
 export function spawnEtherealWind(x: number, y: number): EtherealWindState {
@@ -283,8 +328,6 @@ export function spawnEtherealWind(x: number, y: number): EtherealWindState {
     }
   });
 
-  makeDraggable(el);
-
   const { noise, autoFilter, panner, outputNode } = createEtherealWindSound();
   noise.start();
 
@@ -297,6 +340,7 @@ export function spawnEtherealWind(x: number, y: number): EtherealWindState {
     woahAffected: false,
     woahSends: new Map(),
   };
+  makeDraggable(el, { onErase: () => removeEtherealWind(wind) });
 
   for (const woah of SOUND.woahs) {
     registerSourceToWoah(wind, woah);
@@ -304,6 +348,17 @@ export function spawnEtherealWind(x: number, y: number): EtherealWindState {
 
   SOUND.etheralwinds.push(wind);
   return wind;
+}
+
+export function removeEtherealWind(wind: EtherealWindState): void {
+  for (const gain of wind.woahSends.values()) gain.dispose();
+  wind.noise.dispose();
+  wind.autoFilter.dispose();
+  wind.panner.dispose();
+  wind.outputNode.dispose();
+  wind.el.remove();
+  const idx = SOUND.etheralwinds.indexOf(wind);
+  if (idx !== -1) SOUND.etheralwinds.splice(idx, 1);
 }
 
 export function spawnModulator(x: number, y: number): ModulatorState {
@@ -332,11 +387,16 @@ export function spawnModulator(x: number, y: number): ModulatorState {
     }
   });
 
-  makeDraggable(el);
-
   const mod: ModulatorState = { el, radius: MUSIC.MODULATOR_RADIUS };
+  makeDraggable(el, { onErase: () => removeModulator(mod) });
   SOUND.modulators.push(mod);
   return mod;
+}
+
+export function removeModulator(mod: ModulatorState): void {
+  mod.el.remove();
+  const idx = SOUND.modulators.indexOf(mod);
+  if (idx !== -1) SOUND.modulators.splice(idx, 1);
 }
 
 export function spawnOrbit(x: number, y: number): OrbitState {
@@ -368,9 +428,14 @@ export function spawnOrbit(x: number, y: number): OrbitState {
     }
   });
 
-  makeDraggable(el);
-
   const orbit: OrbitState = { el, radius: MUSIC.ORBIT_RADIUS };
+  makeDraggable(el, { onErase: () => removeOrbit(orbit) });
   SOUND.orbits.push(orbit);
   return orbit;
+}
+
+export function removeOrbit(orbit: OrbitState): void {
+  orbit.el.remove();
+  const idx = SOUND.orbits.indexOf(orbit);
+  if (idx !== -1) SOUND.orbits.splice(idx, 1);
 }

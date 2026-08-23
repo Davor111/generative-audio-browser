@@ -12,13 +12,6 @@ import {
 } from './ts/elements';
 import { resizeConnectionsCanvas, proximityLoop } from './ts/proximity';
 import { initOrbEditor } from './ts/orb-editor';
-import {
-  createOrbSynth,
-  createDeepPadSynth,
-  createWoahFX,
-  createEtherealWindSound,
-  walkNote,
-} from './ts/audio-engine';
 
 async function startAudio(): Promise<void> {
   await Tone.start();
@@ -26,8 +19,6 @@ async function startAudio(): Promise<void> {
   initAudioEngine();
   SOUND.audioReady = true;
   DOM.startOverlay.classList.add('hidden');
-  const { synth, distortion, outputNode } = createOrbSynth();
-
 }
 
 function setupToolbarDrag(btn: HTMLButtonElement, type: string): void {
