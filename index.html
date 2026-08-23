@@ -206,6 +206,65 @@
         </label>
       </form>
     </dialog>
+
+    <dialog id="wind-edit-dialog">
+      <form id="wind-edit-form" method="dialog">
+        <div class="wind-edit-header">
+          <h2>Edit Ethereal Wind</h2>
+          <button type="button" id="wind-edit-close" aria-label="Close">&times;</button>
+        </div>
+
+        <label class="wind-edit-field">
+          <span class="wind-edit-label">Noise Type</span>
+          <select id="wind-edit-noise-type">
+            <option value="white">White</option>
+            <option value="pink">Pink</option>
+            <option value="brown">Brown</option>
+          </select>
+        </label>
+
+        <label class="wind-edit-field">
+          <span class="wind-edit-label">Sweep Rate <span class="wind-edit-value"
+              id="wind-edit-sweep-rate-value"></span></span>
+          <input type="range" id="wind-edit-sweep-rate" min="0.01" max="0.3" step="0.01" />
+        </label>
+
+        <label class="wind-edit-field">
+          <span class="wind-edit-label">Filter Frequency <span class="wind-edit-value"
+              id="wind-edit-filter-freq-value"></span></span>
+          <input type="range" id="wind-edit-filter-freq" min="80" max="600" step="10" />
+        </label>
+
+        <label class="wind-edit-field">
+          <span class="wind-edit-label">Filter Range <span class="wind-edit-value"
+              id="wind-edit-filter-range-value"></span></span>
+          <input type="range" id="wind-edit-filter-range" min="1" max="8" step="0.1" />
+        </label>
+
+        <label class="wind-edit-field">
+          <span class="wind-edit-label">Filter Depth <span class="wind-edit-value"
+              id="wind-edit-filter-depth-value"></span></span>
+          <input type="range" id="wind-edit-filter-depth" min="0" max="1" step="0.01" />
+        </label>
+
+        <label class="wind-edit-field">
+          <span class="wind-edit-label">Pan Rate <span class="wind-edit-value"
+              id="wind-edit-pan-rate-value"></span></span>
+          <input type="range" id="wind-edit-pan-rate" min="0.01" max="0.5" step="0.01" />
+        </label>
+
+        <label class="wind-edit-field">
+          <span class="wind-edit-label">Pan Depth <span class="wind-edit-value"
+              id="wind-edit-pan-depth-value"></span></span>
+          <input type="range" id="wind-edit-pan-depth" min="0" max="1" step="0.01" />
+        </label>
+
+        <label class="wind-edit-field">
+          <span class="wind-edit-label">Volume <span class="wind-edit-value" id="wind-edit-volume-value"></span></span>
+          <input type="range" id="wind-edit-volume" min="0" max="1.2" step="0.01" />
+        </label>
+      </form>
+    </dialog>
   </main>
 
   <script type="module" src="src/app.ts"></script>

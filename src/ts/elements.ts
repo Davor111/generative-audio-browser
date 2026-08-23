@@ -10,6 +10,7 @@ import {
 import { makeDraggable } from './utils';
 import { bindOrbContextMenu } from './orb-editor';
 import { bindPadContextMenu } from './pad-editor';
+import { bindWindContextMenu } from './wind-editor';
 import type {
   OrbState,
   DeepPadState,
@@ -329,6 +330,11 @@ export function spawnEtherealWind(x: number, y: number): EtherealWindState {
   el.appendChild(core);
   DOM.container.appendChild(el);
 
+  const editHint = document.createElement('span');
+  editHint.classList.add('wind-edit-hint');
+  editHint.textContent = 'right click to edit';
+  el.appendChild(editHint);
+
   el.addEventListener('animationend', function onSpawn(e: AnimationEvent) {
     if (e.animationName === 'windSpawnIn') {
       el.classList.add('etheralwind-breathing');
@@ -349,6 +355,7 @@ export function spawnEtherealWind(x: number, y: number): EtherealWindState {
     woahSends: new Map(),
   };
   makeDraggable(el, { onErase: () => removeEtherealWind(wind) });
+  bindWindContextMenu(wind);
 
   for (const woah of SOUND.woahs) {
     registerSourceToWoah(wind, woah);
