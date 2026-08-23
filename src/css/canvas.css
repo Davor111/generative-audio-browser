@@ -1,0 +1,58 @@
+/* ──────────────────────────────────────────────
+   Canvas
+   ────────────────────────────────────────────── */
+#canvas {
+  position: fixed;
+  top: 0;
+  left: var(--toolbar-width);
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  z-index: 1;
+}
+
+#elements-container {
+  position: absolute;
+  inset: 0;
+}
+
+/* ── Connections canvas (lines between Time Warps and affected orbs) ── */
+#connections-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Drop target highlight on canvas */
+#canvas.drag-over::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px dashed hsla(258, 60%, 55%, 0.3);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  animation: dropHighlight 0.4s ease;
+}
+
+@keyframes dropHighlight {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* ──────────────────────────────────────────────
+   SVG filter (hidden)
+   ────────────────────────────────────────────── */
+#bloom-svg {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
