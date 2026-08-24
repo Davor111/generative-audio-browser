@@ -12,6 +12,7 @@ import { makeDraggable } from './utils';
 import { bindOrbContextMenu } from './orb-editor';
 import { bindPadContextMenu } from './pad-editor';
 import { bindWindContextMenu } from './wind-editor';
+import { bindPowerSynthContextMenu } from './powersynth-editor';
 import type {
   OrbState,
   DeepPadState,
@@ -566,6 +567,7 @@ export function spawnPowerSynth(x: number, y: number): PowerSynthState {
   })();
 
   makeDraggable(el, { onErase: () => removePowerSynth(powerSynth) });
+  bindPowerSynthContextMenu(powerSynth);
 
   SOUND.powersynths.push(powerSynth);
   return powerSynth;

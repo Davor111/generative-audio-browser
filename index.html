@@ -276,6 +276,87 @@
         </label>
       </form>
     </dialog>
+
+    <dialog id="ps-edit-dialog">
+      <form id="ps-edit-form" method="dialog">
+        <div class="ps-edit-header">
+          <h2>Edit Power Synth</h2>
+          <button type="button" id="ps-edit-close" aria-label="Close">&times;</button>
+        </div>
+
+        <h3 class="ps-edit-group">Engine</h3>
+        <label class="ps-edit-field">
+          <select id="ps-edit-engine"></select>
+        </label>
+        <p class="ps-edit-note">Engines 2–4 (six-op FM) load a patch bank on switch and may click once.</p>
+
+        <h3 class="ps-edit-group">Timbre</h3>
+        <div class="ps-edit-grid">
+          <label class="ps-edit-field">
+            <span class="ps-edit-label">Harmonics <span class="ps-edit-value" id="ps-edit-harmonics-value"></span></span>
+            <input type="range" id="ps-edit-harmonics" min="0" max="1" step="0.01" />
+          </label>
+          <label class="ps-edit-field">
+            <span class="ps-edit-label">Timbre <span class="ps-edit-value" id="ps-edit-timbre-value"></span></span>
+            <input type="range" id="ps-edit-timbre" min="0" max="1" step="0.01" />
+          </label>
+          <label class="ps-edit-field">
+            <span class="ps-edit-label">Morph <span class="ps-edit-value" id="ps-edit-morph-value"></span></span>
+            <input type="range" id="ps-edit-morph" min="0" max="1" step="0.01" />
+          </label>
+          <label class="ps-edit-field">
+            <span class="ps-edit-label">FM amount <span class="ps-edit-value" id="ps-edit-fm-value"></span></span>
+            <input type="range" id="ps-edit-fm" min="0" max="1" step="0.01" />
+          </label>
+          <label class="ps-edit-field">
+            <span class="ps-edit-label">Timbre mod <span class="ps-edit-value" id="ps-edit-timbre-mod-value"></span></span>
+            <input type="range" id="ps-edit-timbre-mod" min="0" max="1" step="0.01" />
+          </label>
+          <label class="ps-edit-field">
+            <span class="ps-edit-label">Morph mod <span class="ps-edit-value" id="ps-edit-morph-mod-value"></span></span>
+            <input type="range" id="ps-edit-morph-mod" min="0" max="1" step="0.01" />
+          </label>
+        </div>
+
+        <h3 class="ps-edit-group">Envelope</h3>
+        <div class="ps-edit-grid">
+          <label class="ps-edit-field">
+            <span class="ps-edit-label">Decay <span class="ps-edit-value" id="ps-edit-decay-value"></span></span>
+            <input type="range" id="ps-edit-decay" min="0" max="1" step="0.01" />
+          </label>
+          <label class="ps-edit-field">
+            <span class="ps-edit-label">LPG colour <span class="ps-edit-value" id="ps-edit-lpg-value"></span></span>
+            <input type="range" id="ps-edit-lpg" min="0" max="1" step="0.01" />
+          </label>
+        </div>
+
+        <h3 class="ps-edit-group">Note &amp; Output</h3>
+        <div class="ps-edit-grid">
+          <label class="ps-edit-field">
+            <span class="ps-edit-label">Note Interval <span class="ps-edit-value" id="ps-edit-note-interval-value"></span></span>
+            <input type="range" id="ps-edit-note-interval" min="100" max="2000" step="50" />
+          </label>
+          <label class="ps-edit-field">
+            <span class="ps-edit-label">Note Length</span>
+            <select id="ps-edit-note-duration">
+              <option value="16n">1/16</option>
+              <option value="8n">1/8</option>
+              <option value="4n">1/4</option>
+              <option value="2n">1/2</option>
+              <option value="1n">1/1</option>
+            </select>
+          </label>
+          <label class="ps-edit-field">
+            <span class="ps-edit-label">Out / Aux <span class="ps-edit-value" id="ps-edit-mix-value"></span></span>
+            <input type="range" id="ps-edit-mix" min="0" max="1" step="0.01" />
+          </label>
+          <label class="ps-edit-field">
+            <span class="ps-edit-label">Volume <span class="ps-edit-value" id="ps-edit-volume-value"></span></span>
+            <input type="range" id="ps-edit-volume" min="0" max="1.2" step="0.01" />
+          </label>
+        </div>
+      </form>
+    </dialog>
   </main>
 
   <script type="module" src="src/app.ts"></script>
