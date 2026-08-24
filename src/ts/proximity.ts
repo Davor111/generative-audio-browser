@@ -1,4 +1,5 @@
 import { DOM, SOUND } from './state';
+import { PARAMS } from './plaits';
 import { getCenter, distance, type Point } from './utils';
 import type { SoundSource, OrbitableElement } from '../types';
 
@@ -110,6 +111,11 @@ export function proximityLoop(): void {
   for (const wind of SOUND.etheralwinds) {
     wind.woahAffected = false;
   }
+  for (const ps of SOUND.powersynths) {
+    ps.warped = false;
+    ps.woahAffected = false;
+    ps.modAffected = false;
+  }
 
   const orbitableElements: OrbitableElement[] = [
     ...SOUND.orbs,
@@ -118,6 +124,7 @@ export function proximityLoop(): void {
     ...SOUND.woahs,
     ...SOUND.etheralwinds,
     ...SOUND.modulators,
+    ...SOUND.powersynths,
   ];
 
   for (const orbit of SOUND.orbits) {
@@ -166,6 +173,15 @@ export function proximityLoop(): void {
       if (dist <= tw.radius) {
         dp.warped = true;
         drawTwConnection(twCenter, dpCenter, dist, tw.radius);
+      }
+    }
+
+    for (const ps of SOUND.powersynths) {
+      const psCenter = getCenter(ps.el);
+      const dist = distance(twCenter, psCenter);
+      if (dist <= tw.radius) {
+        ps.warped = true;
+        drawTwConnection(twCenter, psCenter, dist, tw.radius);
       }
     }
 
@@ -234,10 +250,37 @@ export function proximityLoop(): void {
     }
   }
 
+  for (const ps of SOUND.powersynths) {
+    const psCenter = getCenter(ps.el);
+    let maxMod = 0;
+
+    for (const mod of SOUND.modulators) {
+      const modCenter = getCenter(mod.el);
+      const dist = distance(modCenter, psCenter);
+      if (dist <= mod.radius) {
+        const modAmount = 1 - (dist / mod.radius);
+        if (modAmount > maxMod) maxMod = modAmount;
+        drawModConnection(modCenter, psCenter, dist, mod.radius);
+      }
+    }
+
+    ps.modAffected = maxMod > 0;
+
+    // Plaits has no distortion stage, so the Modulator sweeps the engine's
+    // own timbre and morph instead. This loop is the ONLY writer of those two
+    // params — the dialog writes baseTimbre/baseMorph, and the effective value
+    // is derived here, so the two never fight over the same number.
+    if (ps.voice) {
+      ps.voice.setParamIfChanged(PARAMS.TIMBRE, Math.min(1, ps.baseTimbre + maxMod * 0.5));
+      ps.voice.setParamIfChanged(PARAMS.MORPH, Math.min(1, ps.baseMorph + maxMod * 0.5));
+    }
+  }
+
   const allSoundSources: SoundSource[] = [
     ...SOUND.orbs,
     ...SOUND.deeppads,
     ...SOUND.etheralwinds,
+    ...SOUND.powersynths,
   ];
 
   for (const woah of SOUND.woahs) {
@@ -289,6 +332,11 @@ export function proximityLoop(): void {
   }
   for (const wind of SOUND.etheralwinds) {
     wind.el.classList.toggle('woah-affected', wind.woahAffected);
+  }
+  for (const ps of SOUND.powersynths) {
+    ps.el.classList.toggle('warped', ps.warped);
+    ps.el.classList.toggle('woah-affected', ps.woahAffected);
+    ps.el.classList.toggle('mod-affected', ps.modAffected);
   }
 
   requestAnimationFrame(proximityLoop);
