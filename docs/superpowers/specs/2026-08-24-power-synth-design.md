@@ -10,7 +10,8 @@ Tone.js. It triggers and walks notes exactly like Orb, and a right-click dialog
 exposes Plaits' engine selection and its full parameter set.
 
 The wasm build comes from the sibling project `mi-plaits-wasm` (`web/plaits.wasm`
-and `web/worklet.js`), vendored into this repo unmodified.
+and `web/worklet.js`), vendored into this repo with a single addition to the
+worklet (a `stop` message — see Asset loading).
 
 ## Motivation
 
@@ -39,19 +40,51 @@ stays purely Tone.js. `plaits.ts` exports:
 | `PARAMS` | Param-id map mirroring `mi-plaits-wasm/src/params.rs` |
 | `ENGINE_NAMES` | The 24 engine names, index-aligned with the `ENGINE` param |
 | `initPlaits()` | Starts the fetch + worklet-module registration; returns/caches a promise |
-| `createPlaitsVoice()` | Awaits readiness, returns one configured voice handle |
+| `createPlaitsVoice(outputNode)` | Awaits readiness, returns one configured voice handle |
 
-`createPlaitsVoice()` returns a handle — not a raw node — with `outputNode`
-(a `Tone.Gain`), `setParam(id, value)`, `setParamIfChanged(id, value, epsilon)`,
-`setMix(value)`, and `dispose()`. Callers never touch the port directly.
+`createPlaitsVoice()` takes the caller's `Tone.Gain` and connects the worklet
+node into it. The gain must exist *before* the voice, because `spawnPowerSynth`
+is synchronous and has to register Woah sends and push element state
+immediately — long before the wasm finishes loading. The element owns the gain;
+the voice only borrows it.
+
+It returns a handle — not a raw node — with `setParam(id, value)`,
+`setParamIfChanged(id, value, epsilon)`, `setMix(value)`, and `dispose()`.
+Callers never touch the port directly.
+
+Params sent before the processor reports `ready` are silently dropped by the
+worklet's own guard, so `createPlaitsVoice` awaits the `ready` message (with a
+5s timeout) before returning, and sets `TRIGGER_PATCHED` / `LEVEL_PATCHED` once
+it arrives.
+
+The wasm `ArrayBuffer` is shared across voices: `postMessage` without a transfer
+list structured-clones it, so one fetched buffer safely seeds every voice.
 
 ### Asset loading
 
 `plaits.wasm` and `plaits-worklet.js` are vendored into `public/`. The worklet
-is copied **verbatim** from `mi-plaits-wasm/web/worklet.js`; its transport (main
-thread posts raw wasm *bytes*, the worklet compiles them itself) is a documented
-workaround for Chromium dropping a `WebAssembly.Module` posted to an
-`AudioWorkletProcessor` port. Do not "simplify" it to compile-once-and-post.
+is copied from `mi-plaits-wasm/web/worklet.js` with **one** addition (below);
+everything else is untouched. In particular its transport — main thread posts
+raw wasm *bytes*, the worklet compiles them itself — is a documented workaround
+for Chromium dropping a `WebAssembly.Module` posted to an `AudioWorkletProcessor`
+port. Do not "simplify" it to compile-once-and-post.
+
+**The one addition: a `stop` message.** The upstream processor's `process()`
+returns `true` unconditionally, which means a node keeps rendering Plaits DSP
+forever even after it is disconnected — the demo page never removes a voice, so
+upstream never needed to care. Here, every erased element would leak a live wasm
+voice burning CPU. The vendored copy therefore gains:
+
+```js
+case 'stop':
+  if (this.ready) { this.x.plaits_free(this.synth); this.ready = false; }
+  this.stopped = true;
+  break;
+```
+
+with `process()` returning `!this.stopped`. `plaits_free` is already exported
+(the upstream benchmark calls it). This should be sent upstream to
+`mi-plaits-wasm` rather than living as a permanent local fork.
 
 Both are resolved against `import.meta.env.BASE_URL`, because the site deploys
 under the `/generative-audio-browser/` base path.
@@ -168,10 +201,18 @@ same block as Orb's and Deep Pad's.
 
 ## The edit dialog
 
-`#powersynth-edit-dialog`, following the established orb/pad/wind editor pattern:
-live apply on the form's `input` event, close button, backdrop-click to close,
+`#ps-edit-dialog`, following the established orb/pad/wind editor pattern: live
+apply on the form's `input` event, close button, backdrop-click to close,
 `currentPowerSynth` cleared on `close`, and `bindPowerSynthContextMenu` wired from
-the spawn function.
+the spawn function. The `ps-edit-` id prefix mirrors the existing
+`deeppad-element` / `pad-edit-dialog` pairing, so the shorthand is precedented.
+
+At 13 controls, listing every input and readout in `DOM` the way the other
+editors do would add ~26 refs to `state.ts`. Instead `DOM` carries only the
+dialog, form, close button and engine select, and `powersynth-editor.ts` drives
+the sliders from a local table keyed by element id. This is the one place this
+element deliberately departs from the existing editor pattern, and the field
+count is why.
 
 Layout is grouped sections in a two-column grid on wide screens, collapsing to one
 column on mobile. The existing dialogs are single-column, but they carry 7–8 fields
@@ -204,7 +245,7 @@ parallel spec file.
 A new `tests/powersynth-editor.spec.ts` then covers what is specific to this
 element, mirroring `orb-editor.spec.ts`:
 
-- right-click opens `#powersynth-edit-dialog`, pre-filled with current values
+- right-click opens `#ps-edit-dialog`, pre-filled with current values
 - selecting a different engine updates the select and raises no console error
 - moving a param slider updates its live readout
 - close button and backdrop-click both close the dialog
@@ -233,7 +274,7 @@ depends on the voice existing, and must reuse `spawnViaClick` from `tests/helper
 
 - `index.html` — toolbar button in the Generators section, dialog markup
 - `style.css` — two `@import`s
-- `src/ts/state.ts` — DOM refs for the dialog, `SOUND.powersynths: []`
+- `src/ts/state.ts` — four DOM refs for the dialog, `SOUND.powersynths: []`
 - `src/types.d.ts` — `PowerSynthState`; add to `SoundState`, `SoundSource`, `OrbitableElement`
 - `src/ts/elements.ts` — `spawnPowerSynth`, `removePowerSynth`
 - `src/ts/proximity.ts` — flag reset, Time Warp, Modulator, Woah, Orbit, class toggles
