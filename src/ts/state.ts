@@ -15,6 +15,7 @@ export const DOM = {
   toolbarEtheralwindBtn: document.getElementById('toolbar-etheralwind') as HTMLButtonElement,
   toolbarModulatorBtn: document.getElementById('toolbar-modulator') as HTMLButtonElement,
   toolbarOrbitBtn: document.getElementById('toolbar-orbit') as HTMLButtonElement,
+  toolbarPowersynthBtn: document.getElementById('toolbar-powersynth') as HTMLButtonElement,
   connectionsCanvas: document.getElementById('connections-canvas') as HTMLCanvasElement,
   ctx: (document.getElementById('connections-canvas') as HTMLCanvasElement).getContext('2d')!,
   orbEditDialog: document.getElementById('orb-edit-dialog') as HTMLDialogElement,
@@ -82,6 +83,7 @@ export const SOUND: SoundState = {
   etheralwinds: [],
   modulators: [],
   orbits: [],
+  powersynths: [],
 };
 
 export const MUSIC = {

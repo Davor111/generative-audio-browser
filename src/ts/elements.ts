@@ -19,6 +19,7 @@ import type {
   EtherealWindState,
   ModulatorState,
   OrbitState,
+  PowerSynthState,
   WoahSource,
 } from '../types';
 
@@ -453,4 +454,64 @@ export function removeOrbit(orbit: OrbitState): void {
   orbit.el.remove();
   const idx = SOUND.orbits.indexOf(orbit);
   if (idx !== -1) SOUND.orbits.splice(idx, 1);
+}
+
+export function spawnPowerSynth(x: number, y: number): PowerSynthState {
+  const el = document.createElement('div');
+  el.classList.add('powersynth-element', 'powersynth-loading');
+  el.style.left = `${x}px`;
+  el.style.top = `${y}px`;
+
+  DOM.container.appendChild(el);
+
+  const editHint = document.createElement('span');
+  editHint.classList.add('powersynth-edit-hint');
+  editHint.textContent = 'right click to edit';
+  el.appendChild(editHint);
+
+  // The output gain exists before the voice does: spawn is synchronous, so
+  // Woah sends and element state have to be wired up now, while the wasm may
+  // still be loading.
+  const outputNode = new Gain(1).connect(SOUND.limiter!);
+
+  const powerSynth: PowerSynthState = {
+    el,
+    voice: null,
+    outputNode,
+    noteIdx: Math.floor(Math.random() * MUSIC.NOTES.length),
+    noteDuration: '8n',
+    noteIntervalMs: MUSIC.NOTE_INTERVAL_MS,
+    engine: 8,
+    baseTimbre: 0.5,
+    baseMorph: 0.5,
+    mix: 0,
+    warped: false,
+    woahAffected: false,
+    modAffected: false,
+    woahSends: new Map(),
+    timerId: null,
+    releaseTimerId: null,
+    disposed: false,
+  };
+
+  for (const woah of SOUND.woahs) {
+    registerSourceToWoah(powerSynth, woah);
+  }
+
+  makeDraggable(el, { onErase: () => removePowerSynth(powerSynth) });
+
+  SOUND.powersynths.push(powerSynth);
+  return powerSynth;
+}
+
+export function removePowerSynth(powerSynth: PowerSynthState): void {
+  powerSynth.disposed = true;
+  if (powerSynth.timerId !== null) clearTimeout(powerSynth.timerId);
+  if (powerSynth.releaseTimerId !== null) clearTimeout(powerSynth.releaseTimerId);
+  for (const gain of powerSynth.woahSends.values()) gain.dispose();
+  powerSynth.voice?.dispose();
+  powerSynth.outputNode.dispose();
+  powerSynth.el.remove();
+  const idx = SOUND.powersynths.indexOf(powerSynth);
+  if (idx !== -1) SOUND.powersynths.splice(idx, 1);
 }

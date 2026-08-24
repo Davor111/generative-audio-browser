@@ -8,6 +8,7 @@ export const ELEMENT_TYPES = [
   { type: 'etheralwind', label: 'Ethereal Wind', elementClass: 'etheralwind-element' },
   { type: 'modulator', label: 'Modulator', elementClass: 'modulator-element' },
   { type: 'orbit', label: 'Orbit', elementClass: 'orbit-element' },
+  { type: 'powersynth', label: 'Power Synth', elementClass: 'powersynth-element' },
 ] as const;
 
 /** Navigates to the app and clicks through the start overlay so audio (and spawning) is unlocked. */
