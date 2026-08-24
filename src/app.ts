@@ -1,6 +1,7 @@
 import * as Tone from 'tone';
 import { DOM, SOUND } from './ts/state';
 import { initAudioEngine } from './ts/audio-engine';
+import { initPlaits } from './ts/plaits';
 import {
   spawnOrb,
   spawnTimewarp,
@@ -19,6 +20,14 @@ async function startAudio(): Promise<void> {
   await Tone.start();
   Tone.getDestination().volume.value = -8;
   initAudioEngine();
+
+  // Eager but non-blocking: the ~300KB wasm fetch overlaps the overlay
+  // dismissing rather than delaying it. spawnPowerSynth awaits the same
+  // cached promise, so a very early spawn simply waits.
+  initPlaits().catch((err) => {
+    console.error('Plaits engine failed to load', err);
+  });
+
   SOUND.audioReady = true;
   DOM.startOverlay.classList.add('hidden');
 }
