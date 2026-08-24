@@ -15,8 +15,15 @@
 </head>
 
 <body>
+  <button id="toolbar-toggle" type="button" aria-label="Open sidebar" aria-expanded="true" aria-controls="toolbar">
+    <span class="toolbar-toggle-icon"></span>
+  </button>
+  <div id="toolbar-backdrop"></div>
   <aside id="toolbar">
-    <h2>Elements</h2>
+    <div class="toolbar-header">
+      <h2>Elements</h2>
+      <button id="toolbar-close" type="button" aria-label="Collapse sidebar">&times;</button>
+    </div>
     <div class="toolbar-items">
       <!-- Generators (Sound producers) -->
       <section class="toolbar-section">
