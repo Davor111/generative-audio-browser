@@ -73,9 +73,11 @@ export interface PlaitsVoice {
  */
 export async function createPlaitsVoice(outputNode: Gain): Promise<PlaitsVoice> {
   const bytes = await initPlaits();
-  const rawContext = getContext().rawContext as unknown as BaseAudioContext;
 
-  const node = new AudioWorkletNode(rawContext, 'plaits', { outputChannelCount: [2] });
+  // Must go through Tone's factory rather than `new AudioWorkletNode(ctx, ...)`:
+  // Tone wraps its context with standardized-audio-context, so `rawContext` is
+  // not a native BaseAudioContext and the native constructor rejects it.
+  const node = getContext().createAudioWorkletNode('plaits', { outputChannelCount: [2] });
   connect(node, outputNode);
 
   // postMessage without a transfer list structured-clones the buffer, so one
