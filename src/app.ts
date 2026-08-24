@@ -30,6 +30,24 @@ function setupToolbarDrag(btn: HTMLButtonElement, type: string): void {
   });
 }
 
+function setSidebarCollapsed(collapsed: boolean): void {
+  document.body.classList.toggle('toolbar-collapsed', collapsed);
+  DOM.toolbarToggleBtn.setAttribute('aria-expanded', String(!collapsed));
+  DOM.toolbarCloseBtn.setAttribute('aria-expanded', String(!collapsed));
+  DOM.toolbarToggleBtn.setAttribute('aria-label', collapsed ? 'Open sidebar' : 'Close sidebar');
+}
+
+DOM.canvas.addEventListener('transitionend', (e: TransitionEvent) => {
+  if (e.propertyName === 'left') resizeConnectionsCanvas();
+});
+
+const mobileMediaQuery = window.matchMedia('(max-width: 768px)');
+setSidebarCollapsed(mobileMediaQuery.matches);
+
+DOM.toolbarToggleBtn.addEventListener('click', () => setSidebarCollapsed(false));
+DOM.toolbarCloseBtn.addEventListener('click', () => setSidebarCollapsed(true));
+DOM.toolbarBackdrop.addEventListener('click', () => setSidebarCollapsed(true));
+
 function setupToolbarClick(btn: HTMLButtonElement, spawnFn: (x: number, y: number) => void): void {
   btn.addEventListener('click', () => {
     if (!SOUND.audioReady) return;

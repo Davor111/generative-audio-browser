@@ -9,6 +9,18 @@
   bottom: 0;
   overflow: hidden;
   z-index: 1;
+  transition: left var(--transition-smooth);
+}
+
+body.toolbar-collapsed #canvas {
+  left: 0;
+}
+
+/* On narrow screens the sidebar is always an overlay drawer, never pushes the canvas */
+@media (max-width: 768px) {
+  #canvas {
+    left: 0;
+  }
 }
 
 #elements-container {
