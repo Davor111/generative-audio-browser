@@ -28,7 +28,7 @@ interface FieldBase<T> {
   name: string;
   label?: string;
   /** Restores the control when the dialog opens. */
-  read: (state: T) => number | string;
+  read: (state: T) => number | string | boolean;
   /** Applies the control's raw string value to the element. */
   write: (state: T, raw: string) => void;
 }
@@ -48,7 +48,16 @@ export interface SelectField<T> extends FieldBase<T> {
   options: Array<[string, string]>;
 }
 
-export type Field<T> = RangeField<T> | SelectField<T>;
+export interface CheckboxField<T> extends FieldBase<T> {
+  kind: 'checkbox';
+  /** `write` receives 'true' or 'false'; use `isChecked` to read it. */
+  read: (state: T) => boolean;
+}
+
+export type Field<T> = RangeField<T> | SelectField<T> | CheckboxField<T>;
+
+/** Reads a CheckboxField's raw value in a `write`. */
+export const isChecked = (raw: string): boolean => raw === 'true';
 
 export interface Section<T> {
   /** Omit for an untitled section (the single-column editors). */
@@ -103,7 +112,13 @@ function buildField<T>(prefix: string, field: Field<T>): HTMLElement {
     wrapper.append(label);
   }
 
-  if (field.kind === 'select') {
+  if (field.kind === 'checkbox') {
+    wrapper.classList.add('edit-field-check');
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.id = id;
+    wrapper.append(input);
+  } else if (field.kind === 'select') {
     const select = document.createElement('select');
     select.id = id;
     for (const [value, text] of field.options) {
@@ -194,12 +209,32 @@ export function createEditor<T extends { el: HTMLElement }>(spec: EditorSpec<T>)
     if (readout) readouts.set(field, readout as HTMLSpanElement);
   }
 
+  /**
+   * Checkboxes carry their state on `.checked`, everything else on `.value`.
+   * Normalising both to a string here keeps one read/write path for all kinds.
+   */
+  function controlValue(field: Field<T>): string {
+    const control = controls.get(field)!;
+    return field.kind === 'checkbox'
+      ? String((control as HTMLInputElement).checked)
+      : control.value;
+  }
+
+  function restoreControl(field: Field<T>, state: T): void {
+    const control = controls.get(field)!;
+    if (field.kind === 'checkbox') {
+      (control as HTMLInputElement).checked = Boolean(field.read(state));
+    } else {
+      control.value = String(field.read(state));
+    }
+  }
+
   let current: T | null = null;
 
   function refreshValueLabels(): void {
     for (const [field, readout] of readouts) {
       if (field.kind !== 'range' || !field.format) continue;
-      readout.textContent = field.format(controls.get(field)!.value);
+      readout.textContent = field.format(controlValue(field));
     }
   }
 
@@ -211,7 +246,7 @@ export function createEditor<T extends { el: HTMLElement }>(spec: EditorSpec<T>)
   function applyFields(): void {
     if (!current) return;
     for (const field of fields) {
-      field.write(current, controls.get(field)!.value);
+      field.write(current, controlValue(field));
     }
     refreshValueLabels();
   }
@@ -235,7 +270,7 @@ export function createEditor<T extends { el: HTMLElement }>(spec: EditorSpec<T>)
     // event, but this keeps a stray apply from writing one element's
     // half-restored controls onto another.
     for (const field of fields) {
-      controls.get(field)!.value = String(field.read(state));
+      restoreControl(field, state);
     }
     current = state;
     refreshValueLabels();

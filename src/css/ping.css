@@ -1,0 +1,165 @@
+/* ──────────────────────────────────────────────
+   Ping — Toolbar Preview
+   ────────────────────────────────────────────── */
+.ping-preview {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  position: relative;
+  background: radial-gradient(circle at 40% 40%,
+      #fdefff 0%,
+      var(--ping-core) 45%,
+      var(--ping-glow) 100%);
+  box-shadow:
+    0 0 10px hsla(295, 90%, 62%, 0.7),
+    0 0 24px hsla(285, 85%, 45%, 0.35);
+}
+
+.ping-preview::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ping-accent);
+  animation: ping-preview-ripple 2s ease-out infinite;
+}
+
+@keyframes ping-preview-ripple {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+/* ──────────────────────────────────────────────
+   Ping Element (on canvas)
+
+   The travelling ripple is drawn on #connections-canvas, not here — its
+   radius changes every frame. These are only the static rings.
+   ────────────────────────────────────────────── */
+.ping-element {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: grab;
+  transform: translate(-50%, -50%) scale(1);
+  filter: url(#bloom-filter);
+  animation: pingSpawnIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+  z-index: 2;
+  touch-action: none;
+  user-select: none;
+}
+
+.ping-element:active,
+.ping-element.is-dragging {
+  cursor: grabbing;
+}
+
+@keyframes pingSpawnIn {
+  from {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.ping-core {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%,
+      #ffffff 0%,
+      var(--ping-core) 42%,
+      var(--ping-glow) 100%);
+  box-shadow:
+    0 0 16px hsla(295, 90%, 62%, 0.8),
+    0 0 38px hsla(285, 85%, 45%, 0.4);
+}
+
+/* Two still sonar rings; the moving one lives on the canvas. */
+.ping-ring-1 {
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+  border: 1.5px solid hsla(295, 90%, 70%, 0.45);
+  pointer-events: none;
+}
+
+.ping-ring-2 {
+  position: absolute;
+  inset: -17px;
+  border-radius: 50%;
+  border: 1px dashed hsla(305, 100%, 80%, 0.28);
+  pointer-events: none;
+}
+
+/* Reach indicator — mirrors PingState.reach via applyPingVisuals(). */
+.ping-reach {
+  position: absolute;
+  width: var(--ping-reach-size, 520px);
+  height: var(--ping-reach-size, 520px);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px dashed hsla(295, 90%, 62%, 0.18);
+  background: radial-gradient(circle, var(--ping-reach-color) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/*
+   Fires once per ripple thrown. A transient flash, not idle motion — the box
+   is otherwise still, so right-clicking to edit stays reliable.
+*/
+.ping-element.ping-pulse .ping-core {
+  animation: pingPulse 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes pingPulse {
+  0% {
+    box-shadow:
+      0 0 16px hsla(295, 90%, 62%, 0.8),
+      0 0 38px hsla(285, 85%, 45%, 0.4);
+  }
+
+  35% {
+    box-shadow:
+      0 0 34px 10px hsla(295, 100%, 72%, 0.9),
+      0 0 70px 18px hsla(285, 90%, 55%, 0.5);
+  }
+
+  100% {
+    box-shadow:
+      0 0 16px hsla(295, 90%, 62%, 0.8),
+      0 0 38px hsla(285, 85%, 45%, 0.4);
+  }
+}
+
+.ping-edit-hint {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+}
+
+.ping-element:hover .ping-edit-hint {
+  opacity: 1;
+}

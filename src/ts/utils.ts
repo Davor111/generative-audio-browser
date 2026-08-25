@@ -1,4 +1,4 @@
-import type { LineState } from '../types';
+import type { LineState, PingState } from '../types';
 import { DOM } from './state';
 
 export interface Point {
@@ -23,7 +23,12 @@ interface DraggableOptions {
   onDragStart?: () => void;
   onDragEnd?: () => void;
   onErase?: () => void;
+  /** Fires on a press-and-release that didn't move and didn't erase. */
+  onTap?: () => void;
 }
+
+/** Slop below which a pointer press still counts as a tap, not a drag. */
+const TAP_SLOP_PX = 4;
 
 function isOverEraseZone(clientX: number, clientY: number): boolean {
   const rect = DOM.eraseZone.getBoundingClientRect();
@@ -32,15 +37,21 @@ function isOverEraseZone(clientX: number, clientY: number): boolean {
   return distance({ x: clientX, y: clientY }, { x: cx, y: cy }) <= rect.width / 2;
 }
 
-export function makeDraggable(el: HTMLElement, { onDragStart, onDragEnd, onErase }: DraggableOptions = {}): void {
+export function makeDraggable(el: HTMLElement, { onDragStart, onDragEnd, onErase, onTap }: DraggableOptions = {}): void {
   let dragging = false;
   let offsetX = 0;
   let offsetY = 0;
   let overEraseZone = false;
+  let pressX = 0;
+  let pressY = 0;
+  let moved = false;
 
   el.addEventListener('pointerdown', (e: PointerEvent) => {
     if (e.button !== 0) return;
     dragging = true;
+    moved = false;
+    pressX = e.clientX;
+    pressY = e.clientY;
     el.classList.add('is-dragging');
     el.setPointerCapture(e.pointerId);
 
@@ -58,6 +69,9 @@ export function makeDraggable(el: HTMLElement, { onDragStart, onDragEnd, onErase
 
   el.addEventListener('pointermove', (e: PointerEvent) => {
     if (!dragging) return;
+    if (!moved && distance({ x: e.clientX, y: e.clientY }, { x: pressX, y: pressY }) > TAP_SLOP_PX) {
+      moved = true;
+    }
     const canvasRect = DOM.canvas.getBoundingClientRect();
     let newX = (e.clientX - canvasRect.left) - offsetX;
     let newY = (e.clientY - canvasRect.top) - offsetY;
@@ -89,6 +103,10 @@ export function makeDraggable(el: HTMLElement, { onDragStart, onDragEnd, onErase
       return;
     }
 
+    // A press that never moved is a tap, not a drag — that's what plays a note
+    // on a generator with autoplay switched off.
+    if (!moved && onTap) onTap();
+
     if (onDragEnd) onDragEnd();
   };
 
@@ -105,4 +123,9 @@ export function makeDraggable(el: HTMLElement, { onDragStart, onDragEnd, onErase
 export function applyLineVisuals(line: LineState): void {
   line.el.style.setProperty('--line-angle', `${line.angle}deg`);
   line.el.style.setProperty('--line-length', `${line.length}px`);
+}
+
+/** Mirrors a Ping's reach onto the CSS custom property that sizes its ring. */
+export function applyPingVisuals(ping: PingState): void {
+  ping.el.style.setProperty('--ping-reach-size', `${ping.reach * 2}px`);
 }

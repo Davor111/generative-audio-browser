@@ -16,6 +16,7 @@ export const DOM = {
   toolbarModulatorBtn: document.getElementById('toolbar-modulator') as HTMLButtonElement,
   toolbarOrbitBtn: document.getElementById('toolbar-orbit') as HTMLButtonElement,
   toolbarLineBtn: document.getElementById('toolbar-line') as HTMLButtonElement,
+  toolbarPingBtn: document.getElementById('toolbar-ping') as HTMLButtonElement,
   toolbarPowersynthBtn: document.getElementById('toolbar-powersynth') as HTMLButtonElement,
   connectionsCanvas: document.getElementById('connections-canvas') as HTMLCanvasElement,
   ctx: (document.getElementById('connections-canvas') as HTMLCanvasElement).getContext('2d')!,
@@ -35,19 +36,16 @@ export const SOUND: SoundState = {
   modulators: [],
   orbits: [],
   lines: [],
+  pings: [],
   powersynths: [],
 };
 
+/**
+ * Note pools are no longer global — each pitched generator builds its own from
+ * its scale, root and range (see src/ts/scales.ts). What stays here is timing
+ * and the modulator radii.
+ */
 export const MUSIC = {
-  NOTES: [
-    'C3', 'D3', 'E3', 'G3', 'A3',
-    'C4', 'D4', 'E4', 'G4', 'A4',
-    'C5', 'D5', 'E5', 'G5', 'A5',
-  ],
-  BASS_NOTES: [
-    'C1', 'G1', 'A1',
-    'C2', 'D2', 'E2', 'G2', 'A2',
-  ],
   NOTE_INTERVAL_MS: 500,
   DEEPPAD_INTERVAL_MS: 5000,
   TIMEWARP_RADIUS: 200,
@@ -55,4 +53,5 @@ export const MUSIC = {
   MODULATOR_RADIUS: 210,
   ORBIT_RADIUS: 240,
   LINE_RADIUS: 240,
+  PING_REACH: 260,
 };

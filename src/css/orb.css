@@ -143,17 +143,9 @@
   opacity: 1;
 }
 
-/* Breathing animation applied via JS with varying durations */
-.orb-breathing:not(.note-pulse):not(.is-dragging) {
-  animation: orbBreathe var(--breathe-duration, 3s) ease-in-out infinite alternate;
-}
-
-@keyframes orbBreathe {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  100% {
-    transform: translate(-50%, -50%) scale(1.12);
-  }
-}
+/*
+   No breathing animation: every element with a right-click editor keeps a
+   still box. A continuously scaling box never settles for a pointer, which
+   makes the editor hard to reach — the modulators without editors (Time Warp,
+   Woah, Modulator, Orbit) still breathe.
+*/

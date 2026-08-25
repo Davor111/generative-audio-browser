@@ -1,4 +1,5 @@
 import { createEditor, fmt, type RangeField } from './editor';
+import { noteFields } from './note-fields';
 import { PARAMS, ENGINE_NAMES } from './plaits';
 import type { PowerSynthState } from '../types';
 
@@ -169,7 +170,12 @@ const editor = createEditor<PowerSynthState>({
       ],
     },
     {
-      title: 'Note & Output',
+      title: 'Notes',
+      grid: true,
+      fields: noteFields<PowerSynthState>({ minOctave: 1, maxOctave: 6, maxRange: 4 }),
+    },
+    {
+      title: 'Output',
       grid: true,
       fields: [
         {

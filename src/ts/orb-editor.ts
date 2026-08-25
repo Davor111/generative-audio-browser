@@ -1,4 +1,5 @@
 import { createEditor, fmt } from './editor';
+import { noteFields } from './note-fields';
 import type { OrbState } from '../types';
 
 const editor = createEditor<OrbState>({
@@ -10,6 +11,11 @@ const editor = createEditor<OrbState>({
   width: '340px',
   sections: [
     {
+      title: 'Notes',
+      fields: noteFields<OrbState>({ minOctave: 1, maxOctave: 6, maxRange: 4 }),
+    },
+    {
+      title: 'Voice',
       fields: [
         {
           name: 'waveform',

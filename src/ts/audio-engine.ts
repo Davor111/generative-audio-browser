@@ -11,7 +11,7 @@ import {
   AutoPanner,
   Noise,
 } from 'tone';
-import { SOUND, MUSIC } from './state';
+import { SOUND } from './state';
 
 export function initAudioEngine(): void {
   const reverb = new Reverb({ decay: 3.5, wet: 0.35 }).toDestination();
@@ -265,7 +265,8 @@ export function createEtherealWindSound() {
   return { noise, autoFilter, panner, outputNode };
 }
 
-export function walkNote(currentIdx: number, scale: string[] = MUSIC.NOTES): number {
+/** Random walk over a generator's note pool, with occasional larger leaps. */
+export function walkNote(currentIdx: number, scale: string[]): number {
   const leap = Math.random() < 0.15;
   const maxStep = leap ? 4 : 2;
   const step = Math.floor(Math.random() * (maxStep * 2 + 1)) - maxStep;

@@ -9,6 +9,7 @@ export const ELEMENT_TYPES = [
   { type: 'modulator', label: 'Modulator', elementClass: 'modulator-element' },
   { type: 'orbit', label: 'Orbit', elementClass: 'orbit-element' },
   { type: 'line', label: 'Line', elementClass: 'line-element' },
+  { type: 'ping', label: 'Ping', elementClass: 'ping-element' },
   { type: 'powersynth', label: 'Power Synth', elementClass: 'powersynth-element' },
 ] as const;
 

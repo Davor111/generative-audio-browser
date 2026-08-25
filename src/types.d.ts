@@ -12,7 +12,36 @@ import type {
 import type { SimpleDistortion, VoiceFX } from './ts/audio-engine';
 import type { PlaitsVoice } from './ts/plaits';
 
-export interface OrbState {
+/** An element that produces sound on its own and can be switched off. */
+export interface Autoplayable {
+  autoplay: boolean;
+  /**
+   * Starts or stops this element's sound. Each generator defines what that
+   * means — reschedule a note loop, release a drone, stop a noise source —
+   * so the editor can toggle any of them without knowing the difference.
+   */
+  setAutoplay(on: boolean): void;
+}
+
+/** A generator that walks a note pool, and so has a scale and a range. */
+export interface PitchedGenerator extends Autoplayable {
+  scale: string;
+  /** Pitch class only ('C', 'F#'); the octave is `baseOctave`. */
+  root: string;
+  baseOctave: number;
+  /** How many octaves above the starting note the pool spans. */
+  octaves: number;
+  /** Derived from the four fields above by refreshNotes(). */
+  notes: string[];
+  noteIdx: number;
+  /**
+   * Plays one note now, whatever "now" means for this generator. Shared by
+   * tap-to-play (autoplay off) and by a Ping ripple sweeping over it.
+   */
+  trigger(): void;
+}
+
+export interface OrbState extends PitchedGenerator {
   el: HTMLDivElement;
   synth: Synth;
   distortion: SimpleDistortion;
@@ -27,7 +56,7 @@ export interface OrbState {
   timerId: ReturnType<typeof setTimeout> | null;
 }
 
-export interface DeepPadState {
+export interface DeepPadState extends PitchedGenerator {
   el: HTMLDivElement;
   synth: Synth;
   filter: Filter;
@@ -62,7 +91,7 @@ export interface WoahState {
   warped: boolean;
 }
 
-export interface EtherealWindState {
+export interface EtherealWindState extends Autoplayable {
   el: HTMLDivElement;
   noise: Noise;
   autoFilter: AutoFilter;
@@ -72,7 +101,7 @@ export interface EtherealWindState {
   woahSends: Map<WoahState, Gain>;
 }
 
-export interface PowerSynthState {
+export interface PowerSynthState extends PitchedGenerator {
   el: HTMLDivElement;
   /** Null until the wasm engine finishes loading, or forever if it failed. */
   voice: PlaitsVoice | null;
@@ -145,6 +174,29 @@ export interface LineState {
   directions: WeakMap<HTMLElement, number>;
 }
 
+/** One expanding ring thrown by a Ping. */
+export interface Ripple {
+  /** Grows by the Ping's speed every frame until it passes `reach`. */
+  radius: number;
+  /** Elements this ring has already fired, so each triggers once per ripple. */
+  hit: Set<HTMLElement>;
+}
+
+export interface PingState {
+  el: HTMLDivElement;
+  /** How far a ripple travels before it dies. Mirrored to --ping-reach-size. */
+  reach: number;
+  /** Ripple expansion in px per frame. */
+  speed: number;
+  autoplay: boolean;
+  intervalMs: number;
+  ripples: Ripple[];
+  timerId: ReturnType<typeof setTimeout> | null;
+  setAutoplay(on: boolean): void;
+  /** Throws one ripple. */
+  trigger(): void;
+}
+
 export interface SoundState {
   audioReady: boolean;
   masterReverb: Reverb | null;
@@ -159,6 +211,7 @@ export interface SoundState {
   modulators: ModulatorState[];
   orbits: OrbitState[];
   lines: LineState[];
+  pings: PingState[];
   powersynths: PowerSynthState[];
 }
 
@@ -176,6 +229,7 @@ type MovableElement =
   | WoahState
   | EtherealWindState
   | ModulatorState
+  | PingState
   | PowerSynthState;
 
 /**

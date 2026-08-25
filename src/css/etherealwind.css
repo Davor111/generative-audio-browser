@@ -169,17 +169,9 @@
   opacity: 1;
 }
 
-/* Breathing */
-.etheralwind-breathing:not(.is-dragging) {
-  animation: windBreathe 3.5s ease-in-out infinite alternate;
-}
-
-@keyframes windBreathe {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  100% {
-    transform: translate(-50%, -50%) scale(1.08);
-  }
-}
+/*
+   No breathing animation: every element with a right-click editor keeps a
+   still box. A continuously scaling box never settles for a pointer, which
+   makes the editor hard to reach — the modulators without editors (Time Warp,
+   Woah, Modulator, Orbit) still breathe.
+*/
