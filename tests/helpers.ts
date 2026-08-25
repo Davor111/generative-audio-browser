@@ -8,6 +8,7 @@ export const ELEMENT_TYPES = [
   { type: 'etheralwind', label: 'Ethereal Wind', elementClass: 'etheralwind-element' },
   { type: 'modulator', label: 'Modulator', elementClass: 'modulator-element' },
   { type: 'orbit', label: 'Orbit', elementClass: 'orbit-element' },
+  { type: 'line', label: 'Line', elementClass: 'line-element' },
   { type: 'powersynth', label: 'Power Synth', elementClass: 'powersynth-element' },
 ] as const;
 

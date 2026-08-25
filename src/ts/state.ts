@@ -15,6 +15,7 @@ export const DOM = {
   toolbarEtheralwindBtn: document.getElementById('toolbar-etheralwind') as HTMLButtonElement,
   toolbarModulatorBtn: document.getElementById('toolbar-modulator') as HTMLButtonElement,
   toolbarOrbitBtn: document.getElementById('toolbar-orbit') as HTMLButtonElement,
+  toolbarLineBtn: document.getElementById('toolbar-line') as HTMLButtonElement,
   toolbarPowersynthBtn: document.getElementById('toolbar-powersynth') as HTMLButtonElement,
   connectionsCanvas: document.getElementById('connections-canvas') as HTMLCanvasElement,
   ctx: (document.getElementById('connections-canvas') as HTMLCanvasElement).getContext('2d')!,
@@ -33,6 +34,7 @@ export const SOUND: SoundState = {
   etheralwinds: [],
   modulators: [],
   orbits: [],
+  lines: [],
   powersynths: [],
 };
 
@@ -52,4 +54,5 @@ export const MUSIC = {
   WOAH_RADIUS: 220,
   MODULATOR_RADIUS: 210,
   ORBIT_RADIUS: 240,
+  LINE_RADIUS: 240,
 };

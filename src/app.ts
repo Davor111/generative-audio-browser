@@ -10,6 +10,7 @@ import {
   spawnEtherealWind,
   spawnModulator,
   spawnOrbit,
+  spawnLine,
   spawnPowerSynth,
 } from './ts/elements';
 import { resizeConnectionsCanvas, proximityLoop } from './ts/proximity';
@@ -114,6 +115,9 @@ DOM.canvas.addEventListener('drop', (e: DragEvent) => {
     case 'orbit':
       spawnOrbit(x, y);
       break;
+    case 'line':
+      spawnLine(x, y);
+      break;
     case 'powersynth':
       spawnPowerSynth(x, y);
       break;
@@ -128,6 +132,7 @@ setupToolbarDrag(DOM.toolbarWoahBtn, 'woah');
 setupToolbarDrag(DOM.toolbarEtheralwindBtn, 'etheralwind');
 setupToolbarDrag(DOM.toolbarModulatorBtn, 'modulator');
 setupToolbarDrag(DOM.toolbarOrbitBtn, 'orbit');
+setupToolbarDrag(DOM.toolbarLineBtn, 'line');
 setupToolbarDrag(DOM.toolbarPowersynthBtn, 'powersynth');
 
 setupToolbarClick(DOM.toolbarOrbBtn, spawnOrb);
@@ -137,4 +142,5 @@ setupToolbarClick(DOM.toolbarWoahBtn, spawnWoah);
 setupToolbarClick(DOM.toolbarEtheralwindBtn, spawnEtherealWind);
 setupToolbarClick(DOM.toolbarModulatorBtn, spawnModulator);
 setupToolbarClick(DOM.toolbarOrbitBtn, spawnOrbit);
+setupToolbarClick(DOM.toolbarLineBtn, spawnLine);
 setupToolbarClick(DOM.toolbarPowersynthBtn, spawnPowerSynth);

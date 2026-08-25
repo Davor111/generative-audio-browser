@@ -10,11 +10,12 @@ import {
   walkNote,
 } from './audio-engine';
 import { createPlaitsVoice, PARAMS } from './plaits';
-import { makeDraggable } from './utils';
+import { makeDraggable, applyLineVisuals } from './utils';
 import { bindOrbContextMenu } from './orb-editor';
 import { bindPadContextMenu } from './pad-editor';
 import { bindWindContextMenu } from './wind-editor';
 import { bindPowerSynthContextMenu } from './powersynth-editor';
+import { bindLineContextMenu } from './line-editor';
 import type {
   OrbState,
   DeepPadState,
@@ -23,6 +24,7 @@ import type {
   EtherealWindState,
   ModulatorState,
   OrbitState,
+  LineState,
   PowerSynthState,
   WoahSource,
 } from '../types';
@@ -458,6 +460,61 @@ export function removeOrbit(orbit: OrbitState): void {
   orbit.el.remove();
   const idx = SOUND.orbits.indexOf(orbit);
   if (idx !== -1) SOUND.orbits.splice(idx, 1);
+}
+
+/** Defaults a freshly placed Line starts with; the editor reads these back. */
+export const LINE_DEFAULTS = {
+  angle: 0,
+  length: MUSIC.LINE_RADIUS * 2,
+  speed: 1.6,
+};
+
+export function spawnLine(x: number, y: number): LineState {
+  const el = document.createElement('div');
+  el.classList.add('line-element');
+  el.style.left = `${x}px`;
+  el.style.top = `${y}px`;
+
+  const radius = document.createElement('div');
+  radius.classList.add('line-radius');
+  radius.style.setProperty('--line-radius-size', `${MUSIC.LINE_RADIUS * 2}px`);
+  const rail = document.createElement('div');
+  rail.classList.add('line-rail');
+  const core = document.createElement('div');
+  core.classList.add('line-core');
+
+  el.appendChild(radius);
+  el.appendChild(rail);
+  el.appendChild(core);
+  DOM.container.appendChild(el);
+
+  const editHint = document.createElement('span');
+  editHint.classList.add('line-edit-hint');
+  editHint.textContent = 'right click to edit';
+  el.appendChild(editHint);
+
+  const line: LineState = {
+    el,
+    radius: MUSIC.LINE_RADIUS,
+    angle: LINE_DEFAULTS.angle,
+    length: LINE_DEFAULTS.length,
+    speed: LINE_DEFAULTS.speed,
+    directions: new WeakMap(),
+  };
+
+  applyLineVisuals(line);
+
+  makeDraggable(el, { onErase: () => removeLine(line) });
+  bindLineContextMenu(line);
+
+  SOUND.lines.push(line);
+  return line;
+}
+
+export function removeLine(line: LineState): void {
+  line.el.remove();
+  const idx = SOUND.lines.indexOf(line);
+  if (idx !== -1) SOUND.lines.splice(idx, 1);
 }
 
 export function spawnPowerSynth(x: number, y: number): PowerSynthState {

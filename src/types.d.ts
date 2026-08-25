@@ -127,6 +127,24 @@ export interface OrbitState {
   radius: number;
 }
 
+export interface LineState {
+  el: HTMLDivElement;
+  /** Circular influence region, like every other modulator. */
+  radius: number;
+  /** Rail direction in degrees, 0 = pointing right. */
+  angle: number;
+  /** Rail length in px; elements bounce at +/- half of it. */
+  length: number;
+  /** Travel speed in px per frame. */
+  speed: number;
+  /**
+   * Which way along the rail each element is currently travelling, flipped on
+   * bounce. Keyed per element and owned by this Line, so two Lines acting on
+   * the same element don't fight over one shared direction.
+   */
+  directions: WeakMap<HTMLElement, number>;
+}
+
 export interface SoundState {
   audioReady: boolean;
   masterReverb: Reverb | null;
@@ -140,6 +158,7 @@ export interface SoundState {
   etheralwinds: EtherealWindState[];
   modulators: ModulatorState[];
   orbits: OrbitState[];
+  lines: LineState[];
   powersynths: PowerSynthState[];
 }
 
@@ -149,7 +168,8 @@ export interface WoahSource {
 }
 
 export type SoundSource = OrbState | DeepPadState | EtherealWindState | PowerSynthState;
-export type OrbitableElement =
+/** Everything both movers can push around, regardless of which is moving. */
+type MovableElement =
   | OrbState
   | DeepPadState
   | TimewarpState
@@ -157,3 +177,10 @@ export type OrbitableElement =
   | EtherealWindState
   | ModulatorState
   | PowerSynthState;
+
+/**
+ * Orbit moves lines; Line moves orbits; neither moves its own kind — otherwise
+ * two of them in range of each other would drag each other around forever.
+ */
+export type OrbitableElement = MovableElement | LineState;
+export type LineMovableElement = MovableElement | OrbitState;

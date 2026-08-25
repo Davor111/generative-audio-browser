@@ -56,6 +56,12 @@
   --tw-accent: hsl(170, 80%, 55%);
   --tw-radius-color: hsla(190, 80%, 55%, 0.12);
 
+  /* Line colours (Scarlet Rail) */
+  --line-core: hsl(4, 95%, 62%);
+  --line-glow: hsl(354, 88%, 46%);
+  --line-accent: hsl(18, 100%, 70%);
+  --line-radius-color: hsla(4, 95%, 55%, 0.12);
+
   /* Power Synth colours (Acid Lime / Plaits) */
   --ps-core: hsl(78, 95%, 58%);
   --ps-glow: hsl(88, 85%, 40%);

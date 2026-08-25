@@ -1,7 +1,7 @@
 import { DOM, SOUND } from './state';
 import { PARAMS } from './plaits';
 import { getCenter, distance, type Point } from './utils';
-import type { SoundSource, OrbitableElement } from '../types';
+import type { SoundSource, OrbitableElement, LineMovableElement } from '../types';
 
 interface RampableParam {
   rampTo(target: number, rampTime: number): unknown;
@@ -91,6 +91,41 @@ function drawOrbitConnection(from: Point, to: Point, dist: number, radius: numbe
   DOM.ctx.restore();
 }
 
+function drawLineConnection(
+  center: Point,
+  axis: Point,
+  halfLength: number,
+  to: Point,
+  dist: number,
+  radius: number,
+): void {
+  const alpha = 1 - dist / radius;
+  DOM.ctx.save();
+
+  // The rail itself.
+  DOM.ctx.strokeStyle = `hsla(4, 95%, 62%, ${0.2 + alpha * 0.4})`;
+  DOM.ctx.lineWidth = 1 + alpha * 1.2;
+  DOM.ctx.setLineDash([6, 6]);
+  DOM.ctx.beginPath();
+  DOM.ctx.moveTo(center.x - axis.x * halfLength, center.y - axis.y * halfLength);
+  DOM.ctx.lineTo(center.x + axis.x * halfLength, center.y + axis.y * halfLength);
+  DOM.ctx.stroke();
+
+  // Tether from the rail's centre out to whatever it's carrying.
+  DOM.ctx.setLineDash([1, 4]);
+  DOM.ctx.beginPath();
+  DOM.ctx.moveTo(center.x, center.y);
+  DOM.ctx.lineTo(to.x, to.y);
+  DOM.ctx.stroke();
+
+  DOM.ctx.setLineDash([]);
+  DOM.ctx.fillStyle = `hsla(10, 100%, 72%, ${0.4 + alpha * 0.5})`;
+  DOM.ctx.beginPath();
+  DOM.ctx.arc(to.x, to.y, 3 + alpha * 3, 0, Math.PI * 2);
+  DOM.ctx.fill();
+  DOM.ctx.restore();
+}
+
 export function proximityLoop(): void {
   const rect = DOM.canvas.getBoundingClientRect();
   DOM.ctx.clearRect(0, 0, rect.width, rect.height);
@@ -125,6 +160,7 @@ export function proximityLoop(): void {
     ...SOUND.etheralwinds,
     ...SOUND.modulators,
     ...SOUND.powersynths,
+    ...SOUND.lines,
   ];
 
   for (const orbit of SOUND.orbits) {
@@ -152,6 +188,69 @@ export function proximityLoop(): void {
 
         drawOrbitConnection(orbitCenter, itemCenter, dist, orbit.radius);
       }
+    }
+  }
+
+  const lineMovableElements: LineMovableElement[] = [
+    ...SOUND.orbs,
+    ...SOUND.deeppads,
+    ...SOUND.timewarps,
+    ...SOUND.woahs,
+    ...SOUND.etheralwinds,
+    ...SOUND.modulators,
+    ...SOUND.powersynths,
+    ...SOUND.orbits,
+  ];
+
+  for (const line of SOUND.lines) {
+    const lineCenter = getCenter(line.el);
+    const radians = (line.angle * Math.PI) / 180;
+    const axis = { x: Math.cos(radians), y: Math.sin(radians) };
+    // Left-hand normal, so +p is consistently one side of the rail.
+    const perp = { x: -axis.y, y: axis.x };
+    const halfLength = line.length / 2;
+
+    for (const item of lineMovableElements) {
+      if (item.el.classList.contains('is-dragging')) continue;
+
+      const itemCenter = getCenter(item.el);
+      const dist = distance(lineCenter, itemCenter);
+      if (dist > line.radius) continue;
+
+      const dx = itemCenter.x - lineCenter.x;
+      const dy = itemCenter.y - lineCenter.y;
+
+      // Decompose the offset into "along the rail" and "off to one side".
+      let along = dx * axis.x + dy * axis.y;
+      let offset = dx * perp.x + dy * perp.y;
+
+      // Ease the side offset away — this is the pull onto the rail.
+      offset *= 0.88;
+      if (Math.abs(offset) < 0.5) offset = 0;
+
+      let dir = line.directions.get(item.el) ?? 1;
+      along += dir * line.speed;
+
+      // Bounce: park it exactly on the end and turn it around.
+      if (along > halfLength) {
+        along = halfLength;
+        dir = -1;
+      } else if (along < -halfLength) {
+        along = -halfLength;
+        dir = 1;
+      }
+      line.directions.set(item.el, dir);
+
+      let newX = lineCenter.x + axis.x * along + perp.x * offset;
+      let newY = lineCenter.y + axis.y * along + perp.y * offset;
+
+      newX = Math.max(30, Math.min(rect.width - 30, newX));
+      newY = Math.max(30, Math.min(rect.height - 30, newY));
+
+      item.el.style.left = `${newX}px`;
+      item.el.style.top = `${newY}px`;
+
+      drawLineConnection(lineCenter, axis, halfLength, itemCenter, dist, line.radius);
     }
   }
 
