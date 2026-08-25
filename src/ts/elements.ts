@@ -5,6 +5,8 @@ import {
   createDeepPadSynth,
   createWoahFX,
   createEtherealWindSound,
+  createVoiceFX,
+  VOICE_FX_DEFAULTS,
   walkNote,
 } from './audio-engine';
 import { createPlaitsVoice, PARAMS } from './plaits';
@@ -476,16 +478,31 @@ export function spawnPowerSynth(x: number, y: number): PowerSynthState {
   // still be loading.
   const outputNode = new Gain(1).connect(SOUND.limiter!);
 
+  // Inserted between the voice and outputNode, so volume and the Woah sends
+  // both stay downstream of the effects.
+  const fx = createVoiceFX(outputNode);
+
   const powerSynth: PowerSynthState = {
     el,
     voice: null,
     outputNode,
+    fx,
     noteIdx: Math.floor(Math.random() * MUSIC.NOTES.length),
     noteDuration: '8n',
     noteIntervalMs: MUSIC.NOTE_INTERVAL_MS,
     engine: 8,
     baseTimbre: 0.5,
     baseMorph: 0.5,
+    harmonics: 0.5,
+    fmAmount: 0,
+    timbreMod: 0,
+    morphMod: 0,
+    decay: 0.5,
+    lpgColour: 0.5,
+    delayTime: VOICE_FX_DEFAULTS.delayTime,
+    delayFeedback: VOICE_FX_DEFAULTS.feedback,
+    delayMix: VOICE_FX_DEFAULTS.delayMix,
+    reverbSend: VOICE_FX_DEFAULTS.reverbSend,
     mix: 0,
     warped: false,
     woahAffected: false,
@@ -542,19 +559,24 @@ export function spawnPowerSynth(x: number, y: number): PowerSynthState {
 
   void (async () => {
     try {
-      const voice = await createPlaitsVoice(outputNode);
+      const voice = await createPlaitsVoice(fx.input);
       // The element may have been erased while the engine was loading.
       if (powerSynth.disposed) {
         voice.dispose();
         return;
       }
       powerSynth.voice = voice;
+      // Replayed from element state rather than hardcoded: the dialog may
+      // have been edited while the engine was still loading.
       voice.setParam(PARAMS.ENGINE, powerSynth.engine);
-      voice.setParam(PARAMS.HARMONICS, 0.5);
+      voice.setParam(PARAMS.HARMONICS, powerSynth.harmonics);
       voice.setParam(PARAMS.TIMBRE, powerSynth.baseTimbre);
       voice.setParam(PARAMS.MORPH, powerSynth.baseMorph);
-      voice.setParam(PARAMS.DECAY, 0.5);
-      voice.setParam(PARAMS.LPG_COLOUR, 0.5);
+      voice.setParam(PARAMS.FM_AMOUNT, powerSynth.fmAmount);
+      voice.setParam(PARAMS.TIMBRE_MOD_AMOUNT, powerSynth.timbreMod);
+      voice.setParam(PARAMS.MORPH_MOD_AMOUNT, powerSynth.morphMod);
+      voice.setParam(PARAMS.DECAY, powerSynth.decay);
+      voice.setParam(PARAMS.LPG_COLOUR, powerSynth.lpgColour);
       voice.setMix(powerSynth.mix);
       el.classList.remove('powersynth-loading');
       scheduleNextNote();
@@ -579,6 +601,7 @@ export function removePowerSynth(powerSynth: PowerSynthState): void {
   if (powerSynth.releaseTimerId !== null) clearTimeout(powerSynth.releaseTimerId);
   for (const gain of powerSynth.woahSends.values()) gain.dispose();
   powerSynth.voice?.dispose();
+  powerSynth.fx.dispose();
   powerSynth.outputNode.dispose();
   powerSynth.el.remove();
   const idx = SOUND.powersynths.indexOf(powerSynth);

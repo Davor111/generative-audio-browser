@@ -6,6 +6,7 @@ import {
   WaveShaper,
   Filter,
   PingPongDelay,
+  Delay,
   AutoFilter,
   AutoPanner,
   Noise,
@@ -16,6 +17,113 @@ export function initAudioEngine(): void {
   const reverb = new Reverb({ decay: 3.5, wet: 0.35 }).toDestination();
   SOUND.masterReverb = reverb;
   SOUND.limiter = new Limiter(-3).connect(reverb);
+
+  // A single shared send bus rather than a Reverb per element: a convolver
+  // each would be wasteful, and per-element decay isn't worth the cost.
+  // Fully wet — elements meter their own send level. Reverb is one of Tone's
+  // CrossFade-backed Effects (see createDistortion below), but as a static,
+  // never-automated send it is the same configuration createWoahFX has always
+  // used without trouble.
+  SOUND.fxReverb = new Reverb({ decay: 6, preDelay: 0.02, wet: 1 }).connect(SOUND.limiter);
+}
+
+export interface VoiceFX {
+  /** Feed the dry voice in here. */
+  input: Gain;
+  setDelayTime(seconds: number): void;
+  setFeedback(amount: number): void;
+  setDelayMix(amount: number): void;
+  setReverbSend(amount: number): void;
+  dispose(): void;
+}
+
+/** The delay defaults a freshly placed element starts with. */
+export const VOICE_FX_DEFAULTS = {
+  delayTime: 0.3,
+  feedback: 0.35,
+  /** Both effects start fully off, so placing an element sounds unchanged. */
+  delayMix: 0,
+  reverbSend: 0,
+};
+
+/**
+ * A per-element insert: a damped feedback delay, plus a send into the shared
+ * reverb bus.
+ *
+ * Deliberately hand-built out of `Delay`/`Gain`/`Filter` rather than
+ * `FeedbackDelay`. Those are plain ToneAudioNodes; `FeedbackDelay` is an
+ * Effect, and Effect's CrossFade-based dry/wet is the node that corrupts
+ * Chromium's graph into permanent silence when paired with this app's
+ * retriggering note loops — the same reason createDistortion is hand-rolled.
+ *
+ * Sits between the voice and the element's `outputNode`, so volume stays
+ * post-effect and Woah sends (which tap `outputNode`) pick the wet signal up
+ * unchanged. The reverb send taps `outputNode` too, making it post-fader:
+ * pulling an element's volume down takes its reverb with it.
+ */
+export function createVoiceFX(outputNode: Gain): VoiceFX {
+  const input = new Gain(1);
+  const output = new Gain(1).connect(outputNode);
+
+  const dryGain = new Gain(1 - VOICE_FX_DEFAULTS.delayMix);
+  const wetGain = new Gain(VOICE_FX_DEFAULTS.delayMix);
+
+  // maxDelay is fixed at construction, so it caps the slider's range.
+  const delay = new Delay({ delayTime: VOICE_FX_DEFAULTS.delayTime, maxDelay: 1.5 });
+  const feedbackGain = new Gain(VOICE_FX_DEFAULTS.feedback);
+  // Rolling off the repeats keeps a high feedback setting from turning into
+  // a bright metallic build-up.
+  const damping = new Filter({ frequency: 3200, type: 'lowpass', rolloff: -12 });
+
+  input.connect(dryGain);
+  dryGain.connect(output);
+
+  input.connect(delay);
+  delay.connect(damping);
+  damping.connect(wetGain);
+  wetGain.connect(output);
+  damping.connect(feedbackGain);
+  feedbackGain.connect(delay);
+
+  const reverbSend = new Gain(VOICE_FX_DEFAULTS.reverbSend);
+  outputNode.connect(reverbSend);
+  reverbSend.connect(SOUND.fxReverb!);
+
+  // Short ramps rather than direct assignment: these are driven by slider
+  // drags, and stepping a gain or a delay time discretely clicks.
+  const RAMP = 0.03;
+
+  return {
+    input,
+
+    setDelayTime(seconds: number): void {
+      delay.delayTime.rampTo(seconds, 0.05);
+    },
+
+    setFeedback(amount: number): void {
+      feedbackGain.gain.rampTo(amount, RAMP);
+    },
+
+    setDelayMix(amount: number): void {
+      wetGain.gain.rampTo(amount, RAMP);
+      dryGain.gain.rampTo(1 - amount, RAMP);
+    },
+
+    setReverbSend(amount: number): void {
+      reverbSend.gain.rampTo(amount, RAMP);
+    },
+
+    dispose(): void {
+      input.dispose();
+      dryGain.dispose();
+      wetGain.dispose();
+      delay.dispose();
+      feedbackGain.dispose();
+      damping.dispose();
+      reverbSend.dispose();
+      output.dispose();
+    },
+  };
 }
 
 export interface SimpleDistortion {

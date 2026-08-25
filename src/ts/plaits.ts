@@ -65,20 +65,20 @@ export interface PlaitsVoice {
 }
 
 /**
- * Creates one monophonic Plaits voice and connects it into `outputNode`.
+ * Creates one monophonic Plaits voice and connects it into `destination`.
  *
- * The caller owns `outputNode` and must create it first: spawnPowerSynth is
+ * The caller owns `destination` and must create it first: spawnPowerSynth is
  * synchronous and needs a real Tone.Gain to register Woah sends against long
  * before the wasm has loaded.
  */
-export async function createPlaitsVoice(outputNode: Gain): Promise<PlaitsVoice> {
+export async function createPlaitsVoice(destination: Gain): Promise<PlaitsVoice> {
   const bytes = await initPlaits();
 
   // Must go through Tone's factory rather than `new AudioWorkletNode(ctx, ...)`:
   // Tone wraps its context with standardized-audio-context, so `rawContext` is
   // not a native BaseAudioContext and the native constructor rejects it.
   const node = getContext().createAudioWorkletNode('plaits', { outputChannelCount: [2] });
-  connect(node, outputNode);
+  connect(node, destination);
 
   // postMessage without a transfer list structured-clones the buffer, so one
   // fetched ArrayBuffer safely seeds every voice.
