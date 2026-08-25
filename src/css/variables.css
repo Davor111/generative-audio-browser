@@ -62,6 +62,12 @@
   --line-accent: hsl(18, 100%, 70%);
   --line-radius-color: hsla(4, 95%, 55%, 0.12);
 
+  /* Ping colours (Electric Violet / Sonar) */
+  --ping-core: hsl(295, 90%, 68%);
+  --ping-glow: hsl(285, 85%, 48%);
+  --ping-accent: hsl(305, 100%, 80%);
+  --ping-reach-color: hsla(295, 90%, 60%, 0.1);
+
   /* Power Synth colours (Acid Lime / Plaits) */
   --ps-core: hsl(78, 95%, 58%);
   --ps-glow: hsl(88, 85%, 40%);

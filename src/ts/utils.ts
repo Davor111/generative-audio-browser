@@ -1,4 +1,4 @@
-import type { LineState } from '../types';
+import type { LineState, PingState } from '../types';
 import { DOM } from './state';
 
 export interface Point {
@@ -123,4 +123,9 @@ export function makeDraggable(el: HTMLElement, { onDragStart, onDragEnd, onErase
 export function applyLineVisuals(line: LineState): void {
   line.el.style.setProperty('--line-angle', `${line.angle}deg`);
   line.el.style.setProperty('--line-length', `${line.length}px`);
+}
+
+/** Mirrors a Ping's reach onto the CSS custom property that sizes its ring. */
+export function applyPingVisuals(ping: PingState): void {
+  ping.el.style.setProperty('--ping-reach-size', `${ping.reach * 2}px`);
 }

@@ -10,13 +10,14 @@ import {
   walkNote,
 } from './audio-engine';
 import { createPlaitsVoice, PARAMS } from './plaits';
-import { makeDraggable, applyLineVisuals } from './utils';
+import { makeDraggable, applyLineVisuals, applyPingVisuals } from './utils';
 import { DEFAULT_SCALE, buildScale } from './scales';
 import { bindOrbContextMenu } from './orb-editor';
 import { bindPadContextMenu } from './pad-editor';
 import { bindWindContextMenu } from './wind-editor';
 import { bindPowerSynthContextMenu } from './powersynth-editor';
 import { bindLineContextMenu } from './line-editor';
+import { bindPingContextMenu } from './ping-editor';
 import type {
   OrbState,
   DeepPadState,
@@ -26,6 +27,7 @@ import type {
   ModulatorState,
   OrbitState,
   LineState,
+  PingState,
   PowerSynthState,
   WoahSource,
 } from '../types';
@@ -86,6 +88,7 @@ export function spawnOrb(x: number, y: number): OrbState {
         orb.timerId = null;
       }
     },
+    trigger: () => playNote(),
   };
 
   for (const woah of SOUND.woahs) {
@@ -126,7 +129,7 @@ export function spawnOrb(x: number, y: number): OrbState {
     // Only meaningful with autoplay off; otherwise the loop is already playing
     // and a stray tap would double up a note.
     onTap: () => {
-      if (!orb.autoplay) playNote();
+      if (!orb.autoplay) orb.trigger();
     },
   });
   bindOrbContextMenu(orb);
@@ -241,6 +244,13 @@ export function spawnDeepPad(x: number, y: number): DeepPadState {
         synth.triggerRelease();
       }
     },
+    trigger() {
+      // While autoplay is on the voice is sustaining, so an attackRelease
+      // would cut the drone off — move the pitch instead. Only when the drone
+      // is released does a trigger mean a fresh swell.
+      if (dp.autoplay) synth.setNote(advanceNote());
+      else synth.triggerAttackRelease(advanceNote(), '2n');
+    },
   };
 
   for (const woah of SOUND.woahs) {
@@ -283,7 +293,7 @@ export function spawnDeepPad(x: number, y: number): DeepPadState {
     // The drone is released while autoplay is off, so a tap is a one-off
     // swell rather than a note on top of a sustaining voice.
     onTap: () => {
-      if (!dp.autoplay) synth.triggerAttackRelease(advanceNote(), '2n');
+      if (!dp.autoplay) dp.trigger();
     },
   });
   bindPadContextMenu(dp);
@@ -558,6 +568,99 @@ export function spawnLine(x: number, y: number): LineState {
   return line;
 }
 
+/** Defaults a freshly placed Ping starts with; the editor reads these back. */
+export const PING_DEFAULTS = {
+  speed: 4,
+  intervalMs: 2000,
+};
+
+export function spawnPing(x: number, y: number): PingState {
+  const el = document.createElement('div');
+  el.classList.add('ping-element');
+  el.style.left = `${x}px`;
+  el.style.top = `${y}px`;
+
+  const reachRing = document.createElement('div');
+  reachRing.classList.add('ping-reach');
+  const ring1 = document.createElement('div');
+  ring1.classList.add('ping-ring-1');
+  const ring2 = document.createElement('div');
+  ring2.classList.add('ping-ring-2');
+  const core = document.createElement('div');
+  core.classList.add('ping-core');
+
+  el.appendChild(reachRing);
+  el.appendChild(ring2);
+  el.appendChild(ring1);
+  el.appendChild(core);
+  DOM.container.appendChild(el);
+
+  const editHint = document.createElement('span');
+  editHint.classList.add('ping-edit-hint');
+  editHint.textContent = 'right click to edit';
+  el.appendChild(editHint);
+
+  const ping: PingState = {
+    el,
+    reach: MUSIC.PING_REACH,
+    speed: PING_DEFAULTS.speed,
+    autoplay: true,
+    intervalMs: PING_DEFAULTS.intervalMs,
+    ripples: [],
+    timerId: null,
+    setAutoplay(on: boolean) {
+      if (on) {
+        if (ping.timerId === null) scheduleNextPing();
+      } else if (ping.timerId !== null) {
+        clearTimeout(ping.timerId);
+        ping.timerId = null;
+      }
+    },
+    trigger() {
+      // The proximity loop owns expansion and hit-testing; throwing a ripple
+      // is just adding one to the list.
+      ping.ripples.push({ radius: 0, hit: new Set() });
+      el.classList.remove('ping-pulse');
+      void el.offsetWidth;
+      el.classList.add('ping-pulse');
+    },
+  };
+
+  function scheduleNextPing(): void {
+    // Same invariant the generators keep: timerId is non-null exactly while a
+    // tick is pending, which is what stops setAutoplay double-scheduling.
+    if (!ping.autoplay) {
+      ping.timerId = null;
+      return;
+    }
+    ping.timerId = setTimeout(() => {
+      ping.trigger();
+      scheduleNextPing();
+    }, ping.intervalMs);
+  }
+  scheduleNextPing();
+
+  applyPingVisuals(ping);
+
+  makeDraggable(el, {
+    onErase: () => removePing(ping),
+    // A hand-thrown stone, whether or not it is also pinging on its own.
+    onTap: () => ping.trigger(),
+  });
+  bindPingContextMenu(ping);
+
+  SOUND.pings.push(ping);
+  return ping;
+}
+
+export function removePing(ping: PingState): void {
+  if (ping.timerId !== null) clearTimeout(ping.timerId);
+  ping.ripples.length = 0;
+  ping.el.remove();
+  const idx = SOUND.pings.indexOf(ping);
+  if (idx !== -1) SOUND.pings.splice(idx, 1);
+}
+
 export function removeLine(line: LineState): void {
   line.el.remove();
   const idx = SOUND.lines.indexOf(line);
@@ -633,6 +736,7 @@ export function spawnPowerSynth(x: number, y: number): PowerSynthState {
         powerSynth.timerId = null;
       }
     },
+    trigger: () => triggerNote(),
   };
 
   for (const woah of SOUND.woahs) {
@@ -718,7 +822,7 @@ export function spawnPowerSynth(x: number, y: number): PowerSynthState {
   makeDraggable(el, {
     onErase: () => removePowerSynth(powerSynth),
     onTap: () => {
-      if (!powerSynth.autoplay) triggerNote();
+      if (!powerSynth.autoplay) powerSynth.trigger();
     },
   });
   bindPowerSynthContextMenu(powerSynth);

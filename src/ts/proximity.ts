@@ -1,7 +1,12 @@
 import { DOM, SOUND } from './state';
 import { PARAMS } from './plaits';
 import { getCenter, distance, type Point } from './utils';
-import type { SoundSource, OrbitableElement, LineMovableElement } from '../types';
+import type {
+  SoundSource,
+  OrbitableElement,
+  LineMovableElement,
+  PitchedGenerator,
+} from '../types';
 
 interface RampableParam {
   rampTo(target: number, rampTime: number): unknown;
@@ -126,6 +131,34 @@ function drawLineConnection(
   DOM.ctx.restore();
 }
 
+/** The expanding wavefront, plus a flash on whatever it just fired. */
+function drawRipple(center: Point, radius: number, reach: number): void {
+  const fade = 1 - radius / reach;
+  DOM.ctx.save();
+  DOM.ctx.strokeStyle = `hsla(295, 90%, 70%, ${0.05 + fade * 0.55})`;
+  DOM.ctx.lineWidth = 1 + fade * 2.5;
+  DOM.ctx.beginPath();
+  DOM.ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+  DOM.ctx.stroke();
+
+  // A soft trailing ring, so the wave reads as water rather than a wire circle.
+  DOM.ctx.strokeStyle = `hsla(285, 95%, 78%, ${0.03 + fade * 0.22})`;
+  DOM.ctx.lineWidth = 6 + fade * 8;
+  DOM.ctx.beginPath();
+  DOM.ctx.arc(center.x, center.y, Math.max(0, radius - 5), 0, Math.PI * 2);
+  DOM.ctx.stroke();
+  DOM.ctx.restore();
+}
+
+function drawRippleHit(point: Point): void {
+  DOM.ctx.save();
+  DOM.ctx.fillStyle = 'hsla(290, 100%, 82%, 0.85)';
+  DOM.ctx.beginPath();
+  DOM.ctx.arc(point.x, point.y, 7, 0, Math.PI * 2);
+  DOM.ctx.fill();
+  DOM.ctx.restore();
+}
+
 export function proximityLoop(): void {
   const rect = DOM.canvas.getBoundingClientRect();
   DOM.ctx.clearRect(0, 0, rect.width, rect.height);
@@ -160,6 +193,7 @@ export function proximityLoop(): void {
     ...SOUND.etheralwinds,
     ...SOUND.modulators,
     ...SOUND.powersynths,
+    ...SOUND.pings,
     ...SOUND.lines,
   ];
 
@@ -199,6 +233,7 @@ export function proximityLoop(): void {
     ...SOUND.etheralwinds,
     ...SOUND.modulators,
     ...SOUND.powersynths,
+    ...SOUND.pings,
     ...SOUND.orbits,
   ];
 
@@ -252,6 +287,41 @@ export function proximityLoop(): void {
 
       drawLineConnection(lineCenter, axis, halfLength, itemCenter, dist, line.radius);
     }
+  }
+
+  // Ping ripples. Each ring grows a little every frame and fires any pitched
+  // generator it has just reached — near elements first, far ones as the wave
+  // arrives. `hit` is what keeps that to once per element per ripple.
+  const pitchedGenerators: Array<PitchedGenerator & { el: HTMLElement }> = [
+    ...SOUND.orbs,
+    ...SOUND.deeppads,
+    ...SOUND.powersynths,
+  ];
+
+  for (const ping of SOUND.pings) {
+    if (ping.ripples.length === 0) continue;
+    const pingCenter = getCenter(ping.el);
+
+    for (const ripple of ping.ripples) {
+      ripple.radius += ping.speed;
+
+      for (const gen of pitchedGenerators) {
+        if (ripple.hit.has(gen.el)) continue;
+
+        const genCenter = getCenter(gen.el);
+        if (distance(pingCenter, genCenter) > ripple.radius) continue;
+
+        ripple.hit.add(gen.el);
+        gen.trigger();
+        drawRippleHit(genCenter);
+      }
+
+      drawRipple(pingCenter, ripple.radius, ping.reach);
+    }
+
+    // Drop spent rings. Filtering in place keeps the array identity, which the
+    // element's own `trigger` pushes onto.
+    ping.ripples = ping.ripples.filter((ripple) => ripple.radius <= ping.reach);
   }
 
   for (const tw of SOUND.timewarps) {

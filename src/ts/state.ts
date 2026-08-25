@@ -16,6 +16,7 @@ export const DOM = {
   toolbarModulatorBtn: document.getElementById('toolbar-modulator') as HTMLButtonElement,
   toolbarOrbitBtn: document.getElementById('toolbar-orbit') as HTMLButtonElement,
   toolbarLineBtn: document.getElementById('toolbar-line') as HTMLButtonElement,
+  toolbarPingBtn: document.getElementById('toolbar-ping') as HTMLButtonElement,
   toolbarPowersynthBtn: document.getElementById('toolbar-powersynth') as HTMLButtonElement,
   connectionsCanvas: document.getElementById('connections-canvas') as HTMLCanvasElement,
   ctx: (document.getElementById('connections-canvas') as HTMLCanvasElement).getContext('2d')!,
@@ -35,6 +36,7 @@ export const SOUND: SoundState = {
   modulators: [],
   orbits: [],
   lines: [],
+  pings: [],
   powersynths: [],
 };
 
@@ -51,4 +53,5 @@ export const MUSIC = {
   MODULATOR_RADIUS: 210,
   ORBIT_RADIUS: 240,
   LINE_RADIUS: 240,
+  PING_REACH: 260,
 };

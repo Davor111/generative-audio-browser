@@ -34,6 +34,11 @@ export interface PitchedGenerator extends Autoplayable {
   /** Derived from the four fields above by refreshNotes(). */
   notes: string[];
   noteIdx: number;
+  /**
+   * Plays one note now, whatever "now" means for this generator. Shared by
+   * tap-to-play (autoplay off) and by a Ping ripple sweeping over it.
+   */
+  trigger(): void;
 }
 
 export interface OrbState extends PitchedGenerator {
@@ -169,6 +174,29 @@ export interface LineState {
   directions: WeakMap<HTMLElement, number>;
 }
 
+/** One expanding ring thrown by a Ping. */
+export interface Ripple {
+  /** Grows by the Ping's speed every frame until it passes `reach`. */
+  radius: number;
+  /** Elements this ring has already fired, so each triggers once per ripple. */
+  hit: Set<HTMLElement>;
+}
+
+export interface PingState {
+  el: HTMLDivElement;
+  /** How far a ripple travels before it dies. Mirrored to --ping-reach-size. */
+  reach: number;
+  /** Ripple expansion in px per frame. */
+  speed: number;
+  autoplay: boolean;
+  intervalMs: number;
+  ripples: Ripple[];
+  timerId: ReturnType<typeof setTimeout> | null;
+  setAutoplay(on: boolean): void;
+  /** Throws one ripple. */
+  trigger(): void;
+}
+
 export interface SoundState {
   audioReady: boolean;
   masterReverb: Reverb | null;
@@ -183,6 +211,7 @@ export interface SoundState {
   modulators: ModulatorState[];
   orbits: OrbitState[];
   lines: LineState[];
+  pings: PingState[];
   powersynths: PowerSynthState[];
 }
 
@@ -200,6 +229,7 @@ type MovableElement =
   | WoahState
   | EtherealWindState
   | ModulatorState
+  | PingState
   | PowerSynthState;
 
 /**
