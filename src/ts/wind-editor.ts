@@ -1,70 +1,125 @@
-import { DOM } from './state';
+import { createEditor, fmt } from './editor';
 import type { EtherealWindState } from '../types';
 
-let currentWind: EtherealWindState | null = null;
+const editor = createEditor<EtherealWindState>({
+  prefix: 'wind',
+  title: 'Edit Ethereal Wind',
+  accent: 'var(--wind-core)',
+  glow: 'hsla(205, 90%, 75%, 0.6)',
+  shadow: ['hsla(215, 80%, 30%, 0.5)', 'hsla(205, 90%, 70%, 0.12)'],
+  width: '340px',
+  sections: [
+    {
+      fields: [
+        {
+          name: 'noise-type',
+          label: 'Noise Type',
+          kind: 'select',
+          options: [
+            ['white', 'White'],
+            ['pink', 'Pink'],
+            ['brown', 'Brown'],
+          ],
+          read: (wind) => wind.noise.type as string,
+          write: (wind, raw) => {
+            wind.noise.type = raw as never;
+          },
+        },
+        {
+          name: 'sweep-rate',
+          label: 'Sweep Rate',
+          kind: 'range',
+          min: 0.01,
+          max: 0.3,
+          step: 0.01,
+          format: fmt.hz,
+          read: (wind) => wind.autoFilter.frequency.value as number,
+          write: (wind, raw) => {
+            wind.autoFilter.frequency.value = Number(raw);
+          },
+        },
+        {
+          name: 'filter-freq',
+          label: 'Filter Frequency',
+          kind: 'range',
+          min: 80,
+          max: 600,
+          step: 10,
+          format: fmt.hzWhole,
+          read: (wind) => wind.autoFilter.baseFrequency as number,
+          write: (wind, raw) => {
+            wind.autoFilter.baseFrequency = Number(raw);
+          },
+        },
+        {
+          name: 'filter-range',
+          label: 'Filter Range',
+          kind: 'range',
+          min: 1,
+          max: 8,
+          step: 0.1,
+          format: fmt.octaves,
+          read: (wind) => wind.autoFilter.octaves,
+          write: (wind, raw) => {
+            wind.autoFilter.octaves = Number(raw);
+          },
+        },
+        {
+          name: 'filter-depth',
+          label: 'Filter Depth',
+          kind: 'range',
+          min: 0,
+          max: 1,
+          step: 0.01,
+          format: fmt.percent,
+          read: (wind) => wind.autoFilter.depth.value,
+          write: (wind, raw) => {
+            wind.autoFilter.depth.value = Number(raw);
+          },
+        },
+        {
+          name: 'pan-rate',
+          label: 'Pan Rate',
+          kind: 'range',
+          min: 0.01,
+          max: 0.5,
+          step: 0.01,
+          format: fmt.hz,
+          read: (wind) => wind.panner.frequency.value as number,
+          write: (wind, raw) => {
+            wind.panner.frequency.value = Number(raw);
+          },
+        },
+        {
+          name: 'pan-depth',
+          label: 'Pan Depth',
+          kind: 'range',
+          min: 0,
+          max: 1,
+          step: 0.01,
+          format: fmt.percent,
+          read: (wind) => wind.panner.depth.value,
+          write: (wind, raw) => {
+            wind.panner.depth.value = Number(raw);
+          },
+        },
+        {
+          name: 'volume',
+          label: 'Volume',
+          kind: 'range',
+          min: 0,
+          max: 1.2,
+          step: 0.01,
+          format: fmt.percent,
+          read: (wind) => wind.outputNode.gain.value,
+          write: (wind, raw) => {
+            wind.outputNode.gain.value = Number(raw);
+          },
+        },
+      ],
+    },
+  ],
+});
 
-function refreshValueLabels(): void {
-  DOM.windEditSweepRateValue.textContent = `${Number(DOM.windEditSweepRate.value).toFixed(2)}Hz`;
-  DOM.windEditFilterFreqValue.textContent = `${DOM.windEditFilterFreq.value}Hz`;
-  DOM.windEditFilterRangeValue.textContent = `${Number(DOM.windEditFilterRange.value).toFixed(1)} oct`;
-  DOM.windEditFilterDepthValue.textContent = `${Math.round(Number(DOM.windEditFilterDepth.value) * 100)}%`;
-  DOM.windEditPanRateValue.textContent = `${Number(DOM.windEditPanRate.value).toFixed(2)}Hz`;
-  DOM.windEditPanDepthValue.textContent = `${Math.round(Number(DOM.windEditPanDepth.value) * 100)}%`;
-  DOM.windEditVolumeValue.textContent = `${Math.round(Number(DOM.windEditVolume.value) * 100)}%`;
-}
-
-function applyFieldsToWind(): void {
-  if (!currentWind) return;
-
-  currentWind.noise.type = DOM.windEditNoiseType.value as any;
-  currentWind.autoFilter.frequency.value = Number(DOM.windEditSweepRate.value);
-  currentWind.autoFilter.baseFrequency = Number(DOM.windEditFilterFreq.value);
-  currentWind.autoFilter.octaves = Number(DOM.windEditFilterRange.value);
-  currentWind.autoFilter.depth.value = Number(DOM.windEditFilterDepth.value);
-  currentWind.panner.frequency.value = Number(DOM.windEditPanRate.value);
-  currentWind.panner.depth.value = Number(DOM.windEditPanDepth.value);
-  currentWind.outputNode.gain.value = Number(DOM.windEditVolume.value);
-
-  refreshValueLabels();
-}
-
-export function openWindEditor(wind: EtherealWindState): void {
-  currentWind = wind;
-
-  DOM.windEditNoiseType.value = wind.noise.type as string;
-  DOM.windEditSweepRate.value = String(wind.autoFilter.frequency.value);
-  DOM.windEditFilterFreq.value = String(wind.autoFilter.baseFrequency);
-  DOM.windEditFilterRange.value = String(wind.autoFilter.octaves);
-  DOM.windEditFilterDepth.value = String(wind.autoFilter.depth.value);
-  DOM.windEditPanRate.value = String(wind.panner.frequency.value);
-  DOM.windEditPanDepth.value = String(wind.panner.depth.value);
-  DOM.windEditVolume.value = String(wind.outputNode.gain.value);
-
-  refreshValueLabels();
-  DOM.windEditDialog.showModal();
-}
-
-export function bindWindContextMenu(wind: EtherealWindState): void {
-  wind.el.addEventListener('contextmenu', (e: MouseEvent) => {
-    e.preventDefault();
-    openWindEditor(wind);
-  });
-}
-
-export function initWindEditor(): void {
-  DOM.windEditForm.addEventListener('input', applyFieldsToWind);
-
-  DOM.windEditClose.addEventListener('click', () => {
-    DOM.windEditDialog.close();
-  });
-
-  DOM.windEditDialog.addEventListener('click', (e: MouseEvent) => {
-    if (e.target === DOM.windEditDialog) {
-      DOM.windEditDialog.close();
-    }
-  });
-
-  DOM.windEditDialog.addEventListener('close', () => {
-    currentWind = null;
-  });
-}
+export const openWindEditor = editor.open;
+export const bindWindContextMenu = editor.bindContextMenu;

@@ -1,69 +1,129 @@
-import { DOM } from './state';
+import { createEditor, fmt } from './editor';
 import type { OrbState } from '../types';
 
-let currentOrb: OrbState | null = null;
+const editor = createEditor<OrbState>({
+  prefix: 'orb',
+  title: 'Edit Orb',
+  accent: 'var(--orb-core)',
+  glow: 'hsla(258, 85%, 65%, 0.6)',
+  shadow: ['hsla(258, 80%, 20%, 0.5)', 'hsla(258, 80%, 50%, 0.12)'],
+  width: '340px',
+  sections: [
+    {
+      fields: [
+        {
+          name: 'waveform',
+          label: 'Waveform',
+          kind: 'select',
+          options: [
+            ['sine', 'Sine'],
+            ['triangle', 'Triangle'],
+            ['square', 'Square'],
+            ['sawtooth', 'Sawtooth'],
+          ],
+          read: (orb) => orb.synth.oscillator.type as string,
+          write: (orb, raw) => {
+            orb.synth.oscillator.type = raw as never;
+          },
+        },
+        {
+          name: 'attack',
+          label: 'Attack',
+          kind: 'range',
+          min: 0.01,
+          max: 2,
+          step: 0.01,
+          format: fmt.seconds,
+          read: (orb) => orb.synth.envelope.attack as number,
+          write: (orb, raw) => {
+            orb.synth.envelope.attack = Number(raw);
+          },
+        },
+        {
+          name: 'decay',
+          label: 'Decay',
+          kind: 'range',
+          min: 0.01,
+          max: 2,
+          step: 0.01,
+          format: fmt.seconds,
+          read: (orb) => orb.synth.envelope.decay as number,
+          write: (orb, raw) => {
+            orb.synth.envelope.decay = Number(raw);
+          },
+        },
+        {
+          name: 'sustain',
+          label: 'Sustain',
+          kind: 'range',
+          min: 0,
+          max: 1,
+          step: 0.01,
+          format: fmt.unit,
+          read: (orb) => orb.synth.envelope.sustain,
+          write: (orb, raw) => {
+            orb.synth.envelope.sustain = Number(raw);
+          },
+        },
+        {
+          name: 'release',
+          label: 'Release',
+          kind: 'range',
+          min: 0.01,
+          max: 4,
+          step: 0.01,
+          format: fmt.seconds,
+          read: (orb) => orb.synth.envelope.release as number,
+          write: (orb, raw) => {
+            orb.synth.envelope.release = Number(raw);
+          },
+        },
+        {
+          name: 'note-duration',
+          label: 'Note Length',
+          kind: 'select',
+          options: [
+            ['16n', '1/16'],
+            ['8n', '1/8'],
+            ['4n', '1/4'],
+            ['2n', '1/2'],
+            ['1n', '1/1'],
+          ],
+          read: (orb) => orb.noteDuration,
+          write: (orb, raw) => {
+            orb.noteDuration = raw;
+          },
+        },
+        {
+          name: 'note-interval',
+          label: 'Note Interval',
+          kind: 'range',
+          min: 100,
+          max: 2000,
+          step: 50,
+          format: fmt.ms,
+          read: (orb) => orb.noteIntervalMs,
+          write: (orb, raw) => {
+            orb.noteIntervalMs = Number(raw);
+          },
+        },
+        {
+          name: 'volume',
+          label: 'Volume',
+          kind: 'range',
+          min: 0,
+          max: 1.2,
+          step: 0.01,
+          format: fmt.percent,
+          read: (orb) => orb.outputNode.gain.value,
+          write: (orb, raw) => {
+            orb.outputNode.gain.value = Number(raw);
+          },
+        },
+      ],
+    },
+  ],
+});
 
-function refreshValueLabels(): void {
-  DOM.orbEditAttackValue.textContent = `${Number(DOM.orbEditAttack.value).toFixed(2)}s`;
-  DOM.orbEditDecayValue.textContent = `${Number(DOM.orbEditDecay.value).toFixed(2)}s`;
-  DOM.orbEditSustainValue.textContent = Number(DOM.orbEditSustain.value).toFixed(2);
-  DOM.orbEditReleaseValue.textContent = `${Number(DOM.orbEditRelease.value).toFixed(2)}s`;
-  DOM.orbEditNoteIntervalValue.textContent = `${DOM.orbEditNoteInterval.value}ms`;
-  DOM.orbEditVolumeValue.textContent = `${Math.round(Number(DOM.orbEditVolume.value) * 100)}%`;
-}
-
-function applyFieldsToOrb(): void {
-  if (!currentOrb) return;
-
-  currentOrb.synth.oscillator.type = DOM.orbEditWaveform.value as any;
-  currentOrb.synth.envelope.attack = Number(DOM.orbEditAttack.value);
-  currentOrb.synth.envelope.decay = Number(DOM.orbEditDecay.value);
-  currentOrb.synth.envelope.sustain = Number(DOM.orbEditSustain.value);
-  currentOrb.synth.envelope.release = Number(DOM.orbEditRelease.value);
-  currentOrb.noteDuration = DOM.orbEditNoteDuration.value;
-  currentOrb.noteIntervalMs = Number(DOM.orbEditNoteInterval.value);
-  currentOrb.outputNode.gain.value = Number(DOM.orbEditVolume.value);
-
-  refreshValueLabels();
-}
-
-export function openOrbEditor(orb: OrbState): void {
-  currentOrb = orb;
-
-  DOM.orbEditWaveform.value = orb.synth.oscillator.type as string;
-  DOM.orbEditAttack.value = String(orb.synth.envelope.attack);
-  DOM.orbEditDecay.value = String(orb.synth.envelope.decay);
-  DOM.orbEditSustain.value = String(orb.synth.envelope.sustain);
-  DOM.orbEditRelease.value = String(orb.synth.envelope.release);
-  DOM.orbEditNoteDuration.value = orb.noteDuration;
-  DOM.orbEditNoteInterval.value = String(orb.noteIntervalMs);
-  DOM.orbEditVolume.value = String(orb.outputNode.gain.value);
-
-  refreshValueLabels();
-  DOM.orbEditDialog.showModal();
-}
-
-export function bindOrbContextMenu(orb: OrbState): void {
-  orb.el.addEventListener('contextmenu', (e: MouseEvent) => {
-    e.preventDefault();
-    openOrbEditor(orb);
-  });
-}
-
-export function initOrbEditor(): void {
-  DOM.orbEditForm.addEventListener('input', applyFieldsToOrb);
-
-  DOM.orbEditClose.addEventListener('click', () => {
-    DOM.orbEditDialog.close();
-  });
-
-  DOM.orbEditDialog.addEventListener('click', (e: MouseEvent) => {
-    if (e.target === DOM.orbEditDialog) {
-      DOM.orbEditDialog.close();
-    }
-  });
-
-  DOM.orbEditDialog.addEventListener('close', () => {
-    currentOrb = null;
-  });
-}
+export const openOrbEditor = editor.open;
+export const bindOrbContextMenu = editor.bindContextMenu;

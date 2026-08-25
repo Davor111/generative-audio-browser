@@ -9,7 +9,7 @@ import type {
   AutoPanner,
   Noise,
 } from 'tone';
-import type { SimpleDistortion } from './ts/audio-engine';
+import type { SimpleDistortion, VoiceFX } from './ts/audio-engine';
 import type { PlaitsVoice } from './ts/plaits';
 
 export interface OrbState {
@@ -88,6 +88,24 @@ export interface PowerSynthState {
    */
   baseTimbre: number;
   baseMorph: number;
+  /**
+   * The remaining Plaits params, mirrored here so each element owns its own
+   * settings. The edit dialog is a singleton: without per-element storage it
+   * restores the previously edited synth's slider positions and then writes
+   * them onto whichever synth is open.
+   */
+  harmonics: number;
+  fmAmount: number;
+  timbreMod: number;
+  morphMod: number;
+  decay: number;
+  lpgColour: number;
+  /** Insert effects, sitting between the voice and `outputNode`. */
+  fx: VoiceFX;
+  delayTime: number;
+  delayFeedback: number;
+  delayMix: number;
+  reverbSend: number;
   mix: number;
   warped: boolean;
   woahAffected: boolean;
@@ -112,6 +130,8 @@ export interface OrbitState {
 export interface SoundState {
   audioReady: boolean;
   masterReverb: Reverb | null;
+  /** Shared reverb send bus that per-element FX chains feed. */
+  fxReverb: Reverb | null;
   limiter: Limiter | null;
   orbs: OrbState[];
   timewarps: TimewarpState[];

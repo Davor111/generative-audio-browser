@@ -11,8 +11,5 @@
 @import './src/css/modulator.css';
 @import './src/css/orbit.css';
 @import './src/css/powersynth.css';
-@import './src/css/orb-edit-dialog.css';
-@import './src/css/pad-edit-dialog.css';
-@import './src/css/wind-edit-dialog.css';
-@import './src/css/ps-edit-dialog.css';
+@import './src/css/edit-dialog.css';
 @import './src/css/erase-zone.css';
