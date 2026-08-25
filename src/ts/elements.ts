@@ -1,4 +1,4 @@
-import { Gain } from 'tone';
+import { Gain, Frequency, Time } from 'tone';
 import { DOM, SOUND, MUSIC } from './state';
 import {
   createOrbSynth,
@@ -7,10 +7,12 @@ import {
   createEtherealWindSound,
   walkNote,
 } from './audio-engine';
+import { createPlaitsVoice, PARAMS } from './plaits';
 import { makeDraggable } from './utils';
 import { bindOrbContextMenu } from './orb-editor';
 import { bindPadContextMenu } from './pad-editor';
 import { bindWindContextMenu } from './wind-editor';
+import { bindPowerSynthContextMenu } from './powersynth-editor';
 import type {
   OrbState,
   DeepPadState,
@@ -19,6 +21,7 @@ import type {
   EtherealWindState,
   ModulatorState,
   OrbitState,
+  PowerSynthState,
   WoahSource,
 } from '../types';
 
@@ -453,4 +456,131 @@ export function removeOrbit(orbit: OrbitState): void {
   orbit.el.remove();
   const idx = SOUND.orbits.indexOf(orbit);
   if (idx !== -1) SOUND.orbits.splice(idx, 1);
+}
+
+export function spawnPowerSynth(x: number, y: number): PowerSynthState {
+  const el = document.createElement('div');
+  el.classList.add('powersynth-element', 'powersynth-loading');
+  el.style.left = `${x}px`;
+  el.style.top = `${y}px`;
+
+  DOM.container.appendChild(el);
+
+  const editHint = document.createElement('span');
+  editHint.classList.add('powersynth-edit-hint');
+  editHint.textContent = 'right click to edit';
+  el.appendChild(editHint);
+
+  // The output gain exists before the voice does: spawn is synchronous, so
+  // Woah sends and element state have to be wired up now, while the wasm may
+  // still be loading.
+  const outputNode = new Gain(1).connect(SOUND.limiter!);
+
+  const powerSynth: PowerSynthState = {
+    el,
+    voice: null,
+    outputNode,
+    noteIdx: Math.floor(Math.random() * MUSIC.NOTES.length),
+    noteDuration: '8n',
+    noteIntervalMs: MUSIC.NOTE_INTERVAL_MS,
+    engine: 8,
+    baseTimbre: 0.5,
+    baseMorph: 0.5,
+    mix: 0,
+    warped: false,
+    woahAffected: false,
+    modAffected: false,
+    woahSends: new Map(),
+    timerId: null,
+    releaseTimerId: null,
+    disposed: false,
+  };
+
+  for (const woah of SOUND.woahs) {
+    registerSourceToWoah(powerSynth, woah);
+  }
+
+  function triggerNote(): void {
+    const voice = powerSynth.voice;
+    if (!voice) return;
+
+    powerSynth.noteIdx = walkNote(powerSynth.noteIdx, MUSIC.NOTES);
+    const midi = Frequency(MUSIC.NOTES[powerSynth.noteIdx]).toMidi();
+
+    // NOTE goes first so the voice picks the pitch up on the rising edge
+    // rather than a block late. MOD_LEVEL is what opens the low-pass gate —
+    // without it the sustained engines stay inaudible.
+    voice.setParam(PARAMS.NOTE, midi);
+    voice.setParam(PARAMS.MOD_LEVEL, 1);
+    voice.setParam(PARAMS.MOD_TRIGGER, 1);
+
+    // Cleared before re-arming: at short intervals with long note lengths a
+    // new note can fire before the previous release, and a stale timer would
+    // gate the new note off early.
+    if (powerSynth.releaseTimerId !== null) clearTimeout(powerSynth.releaseTimerId);
+    powerSynth.releaseTimerId = setTimeout(() => {
+      voice.setParam(PARAMS.MOD_TRIGGER, 0);
+      voice.setParam(PARAMS.MOD_LEVEL, 0);
+    }, Time(powerSynth.noteDuration).toMilliseconds());
+
+    el.classList.remove('note-pulse');
+    void el.offsetWidth;
+    el.classList.add('note-pulse');
+  }
+
+  function scheduleNextNote(): void {
+    let interval = powerSynth.noteIntervalMs;
+    if (powerSynth.warped) {
+      interval = 150 + Math.random() * 700;
+    }
+
+    powerSynth.timerId = setTimeout(() => {
+      triggerNote();
+      scheduleNextNote();
+    }, interval);
+  }
+
+  void (async () => {
+    try {
+      const voice = await createPlaitsVoice(outputNode);
+      // The element may have been erased while the engine was loading.
+      if (powerSynth.disposed) {
+        voice.dispose();
+        return;
+      }
+      powerSynth.voice = voice;
+      voice.setParam(PARAMS.ENGINE, powerSynth.engine);
+      voice.setParam(PARAMS.HARMONICS, 0.5);
+      voice.setParam(PARAMS.TIMBRE, powerSynth.baseTimbre);
+      voice.setParam(PARAMS.MORPH, powerSynth.baseMorph);
+      voice.setParam(PARAMS.DECAY, 0.5);
+      voice.setParam(PARAMS.LPG_COLOUR, 0.5);
+      voice.setMix(powerSynth.mix);
+      el.classList.remove('powersynth-loading');
+      scheduleNextNote();
+    } catch (err) {
+      if (powerSynth.disposed) return;
+      console.error('Power Synth engine failed to load', err);
+      el.classList.remove('powersynth-loading');
+      el.classList.add('powersynth-error');
+    }
+  })();
+
+  makeDraggable(el, { onErase: () => removePowerSynth(powerSynth) });
+  bindPowerSynthContextMenu(powerSynth);
+
+  SOUND.powersynths.push(powerSynth);
+  return powerSynth;
+}
+
+export function removePowerSynth(powerSynth: PowerSynthState): void {
+  powerSynth.disposed = true;
+  if (powerSynth.timerId !== null) clearTimeout(powerSynth.timerId);
+  if (powerSynth.releaseTimerId !== null) clearTimeout(powerSynth.releaseTimerId);
+  for (const gain of powerSynth.woahSends.values()) gain.dispose();
+  powerSynth.voice?.dispose();
+  powerSynth.outputNode.dispose();
+  powerSynth.el.remove();
+  const idx = SOUND.powersynths.indexOf(powerSynth);
+  if (idx !== -1) SOUND.powersynths.splice(idx, 1);
 }

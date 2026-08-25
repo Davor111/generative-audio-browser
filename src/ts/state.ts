@@ -15,6 +15,7 @@ export const DOM = {
   toolbarEtheralwindBtn: document.getElementById('toolbar-etheralwind') as HTMLButtonElement,
   toolbarModulatorBtn: document.getElementById('toolbar-modulator') as HTMLButtonElement,
   toolbarOrbitBtn: document.getElementById('toolbar-orbit') as HTMLButtonElement,
+  toolbarPowersynthBtn: document.getElementById('toolbar-powersynth') as HTMLButtonElement,
   connectionsCanvas: document.getElementById('connections-canvas') as HTMLCanvasElement,
   ctx: (document.getElementById('connections-canvas') as HTMLCanvasElement).getContext('2d')!,
   orbEditDialog: document.getElementById('orb-edit-dialog') as HTMLDialogElement,
@@ -68,6 +69,10 @@ export const DOM = {
   windEditPanRateValue: document.getElementById('wind-edit-pan-rate-value') as HTMLSpanElement,
   windEditPanDepthValue: document.getElementById('wind-edit-pan-depth-value') as HTMLSpanElement,
   windEditVolumeValue: document.getElementById('wind-edit-volume-value') as HTMLSpanElement,
+  psEditDialog: document.getElementById('ps-edit-dialog') as HTMLDialogElement,
+  psEditForm: document.getElementById('ps-edit-form') as HTMLFormElement,
+  psEditClose: document.getElementById('ps-edit-close') as HTMLButtonElement,
+  psEditEngine: document.getElementById('ps-edit-engine') as HTMLSelectElement,
   eraseZone: document.getElementById('erase-zone') as HTMLElement,
 };
 
@@ -82,6 +87,7 @@ export const SOUND: SoundState = {
   etheralwinds: [],
   modulators: [],
   orbits: [],
+  powersynths: [],
 };
 
 export const MUSIC = {

@@ -52,8 +52,14 @@
   --orbit-glow: hsl(35, 95%, 48%);
   --orbit-accent: hsl(275, 90%, 65%);
   --orbit-radius-color: hsla(45, 100%, 55%, 0.12);
+
   --tw-accent: hsl(170, 80%, 55%);
   --tw-radius-color: hsla(190, 80%, 55%, 0.12);
+
+  /* Power Synth colours (Acid Lime / Plaits) */
+  --ps-core: hsl(78, 95%, 58%);
+  --ps-glow: hsl(88, 85%, 40%);
+  --ps-accent: hsl(60, 100%, 72%);
 
   /* Text */
   --text-primary: hsl(220, 20%, 92%);

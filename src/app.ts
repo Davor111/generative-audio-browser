@@ -1,6 +1,7 @@
 import * as Tone from 'tone';
 import { DOM, SOUND } from './ts/state';
 import { initAudioEngine } from './ts/audio-engine';
+import { initPlaits } from './ts/plaits';
 import {
   spawnOrb,
   spawnTimewarp,
@@ -9,16 +10,26 @@ import {
   spawnEtherealWind,
   spawnModulator,
   spawnOrbit,
+  spawnPowerSynth,
 } from './ts/elements';
 import { resizeConnectionsCanvas, proximityLoop } from './ts/proximity';
 import { initOrbEditor } from './ts/orb-editor';
 import { initPadEditor } from './ts/pad-editor';
 import { initWindEditor } from './ts/wind-editor';
+import { initPowerSynthEditor } from './ts/powersynth-editor';
 
 async function startAudio(): Promise<void> {
   await Tone.start();
   Tone.getDestination().volume.value = -8;
   initAudioEngine();
+
+  // Eager but non-blocking: the ~300KB wasm fetch overlaps the overlay
+  // dismissing rather than delaying it. spawnPowerSynth awaits the same
+  // cached promise, so a very early spawn simply waits.
+  initPlaits().catch((err) => {
+    console.error('Plaits engine failed to load', err);
+  });
+
   SOUND.audioReady = true;
   DOM.startOverlay.classList.add('hidden');
 }
@@ -65,6 +76,7 @@ requestAnimationFrame(proximityLoop);
 initOrbEditor();
 initPadEditor();
 initWindEditor();
+initPowerSynthEditor();
 
 DOM.startBtn.addEventListener('click', startAudio);
 
@@ -110,6 +122,9 @@ DOM.canvas.addEventListener('drop', (e: DragEvent) => {
     case 'orbit':
       spawnOrbit(x, y);
       break;
+    case 'powersynth':
+      spawnPowerSynth(x, y);
+      break;
   }
 
 });
@@ -121,6 +136,7 @@ setupToolbarDrag(DOM.toolbarWoahBtn, 'woah');
 setupToolbarDrag(DOM.toolbarEtheralwindBtn, 'etheralwind');
 setupToolbarDrag(DOM.toolbarModulatorBtn, 'modulator');
 setupToolbarDrag(DOM.toolbarOrbitBtn, 'orbit');
+setupToolbarDrag(DOM.toolbarPowersynthBtn, 'powersynth');
 
 setupToolbarClick(DOM.toolbarOrbBtn, spawnOrb);
 setupToolbarClick(DOM.toolbarTimewarpBtn, spawnTimewarp);
@@ -129,3 +145,4 @@ setupToolbarClick(DOM.toolbarWoahBtn, spawnWoah);
 setupToolbarClick(DOM.toolbarEtheralwindBtn, spawnEtherealWind);
 setupToolbarClick(DOM.toolbarModulatorBtn, spawnModulator);
 setupToolbarClick(DOM.toolbarOrbitBtn, spawnOrbit);
+setupToolbarClick(DOM.toolbarPowersynthBtn, spawnPowerSynth);
