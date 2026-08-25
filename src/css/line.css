@@ -1,0 +1,187 @@
+/* ──────────────────────────────────────────────
+   Line — Toolbar Preview
+   ────────────────────────────────────────────── */
+.line-preview {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  position: relative;
+  background: radial-gradient(circle at 40% 40%,
+      #fff0ee 0%,
+      var(--line-core) 45%,
+      var(--line-glow) 100%);
+  box-shadow:
+    0 0 10px hsla(4, 95%, 58%, 0.7),
+    0 0 24px hsla(354, 90%, 45%, 0.35);
+}
+
+.line-preview::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -6px;
+  right: -6px;
+  height: 2px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg,
+      transparent 0%,
+      var(--line-accent) 25%,
+      var(--line-accent) 75%,
+      transparent 100%);
+  animation: line-preview-sweep 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes line-preview-sweep {
+  0% {
+    transform: translateY(-50%) scaleX(0.55);
+  }
+
+  100% {
+    transform: translateY(-50%) scaleX(1);
+  }
+}
+
+/* ──────────────────────────────────────────────
+   Line Element (on canvas)
+   ────────────────────────────────────────────── */
+.line-element {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  cursor: grab;
+  transform: translate(-50%, -50%) scale(1);
+  filter: url(#bloom-filter);
+  animation: lineSpawnIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+  z-index: 2;
+  touch-action: none;
+  user-select: none;
+}
+
+.line-element:active,
+.line-element.is-dragging {
+  cursor: grabbing;
+}
+
+@keyframes lineSpawnIn {
+  from {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.line-core {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%,
+      #ffffff 0%,
+      var(--line-core) 40%,
+      var(--line-glow) 100%);
+  box-shadow:
+    0 0 16px hsla(4, 95%, 58%, 0.8),
+    0 0 38px hsla(354, 90%, 45%, 0.4);
+}
+
+/*
+   The rail. Width tracks --line-length and rotation tracks --line-angle, both
+   written by applyLineVisuals() in utils.ts — keep the two in sync.
+*/
+.line-rail {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--line-length, 480px);
+  height: 3px;
+  transform: translate(-50%, -50%) rotate(var(--line-angle, 0deg));
+  background: linear-gradient(90deg,
+      transparent 0%,
+      hsla(4, 95%, 62%, 0.55) 8%,
+      hsla(18, 100%, 72%, 0.85) 50%,
+      hsla(4, 95%, 62%, 0.55) 92%,
+      transparent 100%);
+  box-shadow: 0 0 12px hsla(4, 95%, 58%, 0.45);
+  pointer-events: none;
+}
+
+/* End caps, so the bounce points read as real ends. */
+.line-rail::before,
+.line-rail::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 3px;
+  height: 13px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  background: var(--line-accent);
+  box-shadow: 0 0 8px hsla(18, 100%, 65%, 0.75);
+}
+
+.line-rail::before {
+  left: 0;
+}
+
+.line-rail::after {
+  right: 0;
+}
+
+/* Influence radius indicator — mirrors MUSIC.LINE_RADIUS. */
+.line-radius {
+  position: absolute;
+  width: var(--line-radius-size, 480px);
+  height: var(--line-radius-size, 480px);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px dashed hsla(4, 95%, 58%, 0.2);
+  background: radial-gradient(circle, var(--line-radius-color) 0%, transparent 70%);
+  pointer-events: none;
+  animation: lineRadiusBreathe 4.5s ease-in-out infinite alternate;
+}
+
+@keyframes lineRadiusBreathe {
+  0% {
+    transform: translate(-50%, -50%) scale(0.97);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1.03);
+    opacity: 0.9;
+  }
+}
+
+/*
+   No breathing animation on the element itself, unlike Orbit/Time Warp: the
+   pulse lives on the .line-radius child instead, so the Line's own box stays
+   still. A continuously scaling box is never "stable" for a pointer, which
+   makes the right-click editor unreachable (Power Synth's core is static for
+   the same reason).
+*/
+
+/* Right-click hint, matching the generators' */
+.line-edit-hint {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+}
+
+.line-element:hover .line-edit-hint {
+  opacity: 1;
+}

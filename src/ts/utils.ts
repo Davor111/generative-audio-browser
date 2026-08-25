@@ -1,3 +1,4 @@
+import type { LineState } from '../types';
 import { DOM } from './state';
 
 export interface Point {
@@ -93,4 +94,15 @@ export function makeDraggable(el: HTMLElement, { onDragStart, onDragEnd, onErase
 
   el.addEventListener('pointerup', stop);
   el.addEventListener('pointercancel', stop);
+}
+
+/**
+ * Mirrors a Line's angle and length onto the CSS custom properties that draw
+ * its rail — the same keep-JS-and-CSS-in-sync rule the radius constants follow.
+ * Lives here rather than in elements.ts so line-editor.ts can call it without
+ * creating an import cycle.
+ */
+export function applyLineVisuals(line: LineState): void {
+  line.el.style.setProperty('--line-angle', `${line.angle}deg`);
+  line.el.style.setProperty('--line-length', `${line.length}px`);
 }
