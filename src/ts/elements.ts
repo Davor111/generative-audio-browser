@@ -48,22 +48,12 @@ export function spawnOrb(x: number, y: number): OrbState {
   el.style.setProperty('--orb-core', `hsl(${258 + hueShift}, 90%, 68%)`);
   el.style.setProperty('--orb-glow', `hsl(${258 + hueShift}, 82%, 52%)`);
 
-  const breatheDur = 2.5 + Math.random() * 2;
-  el.style.setProperty('--breathe-duration', `${breatheDur}s`);
-
   DOM.container.appendChild(el);
 
   const editHint = document.createElement('span');
   editHint.classList.add('orb-edit-hint');
   editHint.textContent = 'right click to edit';
   el.appendChild(editHint);
-
-  el.addEventListener('animationend', function onSpawn(e: AnimationEvent) {
-    if (e.animationName === 'orbSpawnIn') {
-      el.classList.add('orb-breathing');
-      el.removeEventListener('animationend', onSpawn);
-    }
-  });
 
   const { synth, distortion, outputNode } = createOrbSynth();
   let noteIdx = Math.floor(Math.random() * MUSIC.NOTES.length);
@@ -172,22 +162,12 @@ export function spawnDeepPad(x: number, y: number): DeepPadState {
   glowRing.classList.add('deeppad-glow-ring');
   el.appendChild(glowRing);
 
-  const breatheDur = 4.0 + Math.random() * 2;
-  el.style.setProperty('--dp-breathe-duration', `${breatheDur}s`);
-
   DOM.container.appendChild(el);
 
   const editHint = document.createElement('span');
   editHint.classList.add('dp-edit-hint');
   editHint.textContent = 'right click to edit';
   el.appendChild(editHint);
-
-  el.addEventListener('animationend', function onSpawn(e: AnimationEvent) {
-    if (e.animationName === 'dpSpawnIn') {
-      el.classList.add('deeppad-breathing');
-      el.removeEventListener('animationend', onSpawn);
-    }
-  });
 
   const { synth, filter, distortion, outputNode, baseFreq } = createDeepPadSynth();
   let noteIdx = Math.floor(Math.random() * MUSIC.BASS_NOTES.length);
@@ -341,13 +321,6 @@ export function spawnEtherealWind(x: number, y: number): EtherealWindState {
   editHint.classList.add('wind-edit-hint');
   editHint.textContent = 'right click to edit';
   el.appendChild(editHint);
-
-  el.addEventListener('animationend', function onSpawn(e: AnimationEvent) {
-    if (e.animationName === 'windSpawnIn') {
-      el.classList.add('etheralwind-breathing');
-      el.removeEventListener('animationend', onSpawn);
-    }
-  });
 
   const { noise, autoFilter, panner, outputNode } = createEtherealWindSound();
   noise.start();
