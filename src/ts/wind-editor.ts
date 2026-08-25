@@ -1,4 +1,5 @@
 import { createEditor, fmt } from './editor';
+import { autoplayField } from './note-fields';
 import type { EtherealWindState } from '../types';
 
 const editor = createEditor<EtherealWindState>({
@@ -9,6 +10,10 @@ const editor = createEditor<EtherealWindState>({
   shadow: ['hsla(215, 80%, 30%, 0.5)', 'hsla(205, 90%, 70%, 0.12)'],
   width: '340px',
   sections: [
+    {
+      // Unpitched — no scale or range, just on/off.
+      fields: [autoplayField<EtherealWindState>()],
+    },
     {
       fields: [
         {

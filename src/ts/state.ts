@@ -38,16 +38,12 @@ export const SOUND: SoundState = {
   powersynths: [],
 };
 
+/**
+ * Note pools are no longer global — each pitched generator builds its own from
+ * its scale, root and range (see src/ts/scales.ts). What stays here is timing
+ * and the modulator radii.
+ */
 export const MUSIC = {
-  NOTES: [
-    'C3', 'D3', 'E3', 'G3', 'A3',
-    'C4', 'D4', 'E4', 'G4', 'A4',
-    'C5', 'D5', 'E5', 'G5', 'A5',
-  ],
-  BASS_NOTES: [
-    'C1', 'G1', 'A1',
-    'C2', 'D2', 'E2', 'G2', 'A2',
-  ],
   NOTE_INTERVAL_MS: 500,
   DEEPPAD_INTERVAL_MS: 5000,
   TIMEWARP_RADIUS: 200,

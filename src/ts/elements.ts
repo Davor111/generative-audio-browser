@@ -11,6 +11,7 @@ import {
 } from './audio-engine';
 import { createPlaitsVoice, PARAMS } from './plaits';
 import { makeDraggable, applyLineVisuals } from './utils';
+import { DEFAULT_SCALE, buildScale } from './scales';
 import { bindOrbContextMenu } from './orb-editor';
 import { bindPadContextMenu } from './pad-editor';
 import { bindWindContextMenu } from './wind-editor';
@@ -56,47 +57,78 @@ export function spawnOrb(x: number, y: number): OrbState {
   el.appendChild(editHint);
 
   const { synth, distortion, outputNode } = createOrbSynth();
-  let noteIdx = Math.floor(Math.random() * MUSIC.NOTES.length);
+  const notes = buildScale('C', 3, DEFAULT_SCALE, 3);
 
   const orb: OrbState = {
     el,
     synth,
     distortion,
     outputNode,
-    noteIdx,
+    noteIdx: Math.floor(Math.random() * notes.length),
     noteDuration: '8n',
     noteIntervalMs: MUSIC.NOTE_INTERVAL_MS,
+    autoplay: true,
+    scale: DEFAULT_SCALE,
+    root: 'C',
+    baseOctave: 3,
+    octaves: 3,
+    notes,
     warped: false,
     woahAffected: false,
     modAffected: false,
     woahSends: new Map(),
     timerId: null,
+    setAutoplay(on: boolean) {
+      if (on) {
+        if (orb.timerId === null) scheduleNextNote();
+      } else if (orb.timerId !== null) {
+        clearTimeout(orb.timerId);
+        orb.timerId = null;
+      }
+    },
   };
 
   for (const woah of SOUND.woahs) {
     registerSourceToWoah(orb, woah);
   }
 
+  function playNote(): void {
+    orb.noteIdx = walkNote(orb.noteIdx, orb.notes);
+    synth.triggerAttackRelease(orb.notes[orb.noteIdx], orb.noteDuration);
+
+    el.classList.remove('note-pulse');
+    void el.offsetWidth;
+    el.classList.add('note-pulse');
+  }
+
   function scheduleNextNote(): void {
+    // Nulling the timer here keeps the invariant setAutoplay relies on:
+    // timerId is non-null exactly while a tick is pending.
+    if (!orb.autoplay) {
+      orb.timerId = null;
+      return;
+    }
+
     let interval = orb.noteIntervalMs;
     if (orb.warped) {
       interval = 150 + Math.random() * 700;
     }
 
     orb.timerId = setTimeout(() => {
-      orb.noteIdx = walkNote(orb.noteIdx, MUSIC.NOTES);
-      synth.triggerAttackRelease(MUSIC.NOTES[orb.noteIdx], orb.noteDuration);
-
-      el.classList.remove('note-pulse');
-      void el.offsetWidth;
-      el.classList.add('note-pulse');
-
+      playNote();
       scheduleNextNote();
     }, interval);
   }
   scheduleNextNote();
 
-  makeDraggable(el, { onErase: () => removeOrb(orb) });
+  makeDraggable(el, {
+    onErase: () => removeOrb(orb),
+    // Only meaningful with autoplay off; otherwise the loop is already playing
+    // and a stray tap would double up a note.
+    onTap: () => {
+      if (!orb.autoplay) playNote();
+    },
+  });
   bindOrbContextMenu(orb);
 
   SOUND.orbs.push(orb);
@@ -170,9 +202,10 @@ export function spawnDeepPad(x: number, y: number): DeepPadState {
   el.appendChild(editHint);
 
   const { synth, filter, distortion, outputNode, baseFreq } = createDeepPadSynth();
-  let noteIdx = Math.floor(Math.random() * MUSIC.BASS_NOTES.length);
+  const notes = buildScale('C', 1, DEFAULT_SCALE, 2);
+  const startIdx = Math.floor(Math.random() * notes.length);
 
-  synth.triggerAttack(MUSIC.BASS_NOTES[noteIdx]);
+  synth.triggerAttack(notes[startIdx]);
 
   const dp: DeepPadState = {
     el,
@@ -181,20 +214,55 @@ export function spawnDeepPad(x: number, y: number): DeepPadState {
     distortion,
     outputNode,
     baseFreq,
-    noteIdx,
+    noteIdx: startIdx,
     noteIntervalMs: MUSIC.DEEPPAD_INTERVAL_MS,
+    autoplay: true,
+    scale: DEFAULT_SCALE,
+    root: 'C',
+    baseOctave: 1,
+    octaves: 2,
+    notes,
     warped: false,
     woahAffected: false,
     modAffected: false,
     woahSends: new Map(),
     timerId: null,
+    setAutoplay(on: boolean) {
+      if (on) {
+        // Deep Pad drones rather than firing discrete notes, so switching it
+        // back on means re-attacking, not just resuming the timer.
+        synth.triggerAttack(dp.notes[dp.noteIdx]);
+        if (dp.timerId === null) scheduleNextPadNote();
+      } else {
+        if (dp.timerId !== null) {
+          clearTimeout(dp.timerId);
+          dp.timerId = null;
+        }
+        synth.triggerRelease();
+      }
+    },
   };
 
   for (const woah of SOUND.woahs) {
     registerSourceToWoah(dp, woah);
   }
 
+  function advanceNote(): string {
+    dp.noteIdx = walkNote(dp.noteIdx, dp.notes);
+
+    el.classList.remove('dp-note-change');
+    void el.offsetWidth;
+    el.classList.add('dp-note-change');
+
+    return dp.notes[dp.noteIdx];
+  }
+
   function scheduleNextPadNote(): void {
+    if (!dp.autoplay) {
+      dp.timerId = null;
+      return;
+    }
+
     let interval = dp.noteIntervalMs;
     if (dp.warped) {
       interval = 900 + Math.random() * 700;
@@ -204,21 +272,20 @@ export function spawnDeepPad(x: number, y: number): DeepPadState {
     }
 
     dp.timerId = setTimeout(() => {
-      dp.noteIdx = walkNote(dp.noteIdx, MUSIC.BASS_NOTES);
-      const newNote = MUSIC.BASS_NOTES[dp.noteIdx];
-
-      synth.setNote(newNote);
-
-      el.classList.remove('dp-note-change');
-      void el.offsetWidth;
-      el.classList.add('dp-note-change');
-
+      synth.setNote(advanceNote());
       scheduleNextPadNote();
     }, interval);
   }
   scheduleNextPadNote();
 
-  makeDraggable(el, { onErase: () => removeDeepPad(dp) });
+  makeDraggable(el, {
+    onErase: () => removeDeepPad(dp),
+    // The drone is released while autoplay is off, so a tap is a one-off
+    // swell rather than a note on top of a sustaining voice.
+    onTap: () => {
+      if (!dp.autoplay) synth.triggerAttackRelease(advanceNote(), '2n');
+    },
+  });
   bindPadContextMenu(dp);
 
   SOUND.deeppads.push(dp);
@@ -331,8 +398,15 @@ export function spawnEtherealWind(x: number, y: number): EtherealWindState {
     autoFilter,
     panner,
     outputNode,
+    autoplay: true,
     woahAffected: false,
     woahSends: new Map(),
+    setAutoplay(on: boolean) {
+      // Unpitched, so there is nothing to schedule — the toggle simply starts
+      // and stops the noise source. Restarting a stopped Tone.Noise is fine.
+      if (on) noise.start();
+      else noise.stop();
+    },
   };
   makeDraggable(el, { onErase: () => removeEtherealWind(wind) });
   bindWindContextMenu(wind);
@@ -512,15 +586,23 @@ export function spawnPowerSynth(x: number, y: number): PowerSynthState {
   // both stay downstream of the effects.
   const fx = createVoiceFX(outputNode);
 
+  const psNotes = buildScale('C', 3, DEFAULT_SCALE, 3);
+
   const powerSynth: PowerSynthState = {
     el,
     voice: null,
     outputNode,
     fx,
-    noteIdx: Math.floor(Math.random() * MUSIC.NOTES.length),
+    noteIdx: Math.floor(Math.random() * psNotes.length),
     noteDuration: '8n',
     noteIntervalMs: MUSIC.NOTE_INTERVAL_MS,
     engine: 8,
+    autoplay: true,
+    scale: DEFAULT_SCALE,
+    root: 'C',
+    baseOctave: 3,
+    octaves: 3,
+    notes: psNotes,
     baseTimbre: 0.5,
     baseMorph: 0.5,
     harmonics: 0.5,
@@ -541,6 +623,16 @@ export function spawnPowerSynth(x: number, y: number): PowerSynthState {
     timerId: null,
     releaseTimerId: null,
     disposed: false,
+    setAutoplay(on: boolean) {
+      if (on) {
+        // The engine may still be loading; the load handler starts the loop
+        // itself, and it checks autoplay before doing so.
+        if (powerSynth.voice && powerSynth.timerId === null) scheduleNextNote();
+      } else if (powerSynth.timerId !== null) {
+        clearTimeout(powerSynth.timerId);
+        powerSynth.timerId = null;
+      }
+    },
   };
 
   for (const woah of SOUND.woahs) {
@@ -551,8 +643,8 @@ export function spawnPowerSynth(x: number, y: number): PowerSynthState {
     const voice = powerSynth.voice;
     if (!voice) return;
 
-    powerSynth.noteIdx = walkNote(powerSynth.noteIdx, MUSIC.NOTES);
-    const midi = Frequency(MUSIC.NOTES[powerSynth.noteIdx]).toMidi();
+    powerSynth.noteIdx = walkNote(powerSynth.noteIdx, powerSynth.notes);
+    const midi = Frequency(powerSynth.notes[powerSynth.noteIdx]).toMidi();
 
     // NOTE goes first so the voice picks the pitch up on the rising edge
     // rather than a block late. MOD_LEVEL is what opens the low-pass gate —
@@ -576,6 +668,11 @@ export function spawnPowerSynth(x: number, y: number): PowerSynthState {
   }
 
   function scheduleNextNote(): void {
+    if (!powerSynth.autoplay) {
+      powerSynth.timerId = null;
+      return;
+    }
+
     let interval = powerSynth.noteIntervalMs;
     if (powerSynth.warped) {
       interval = 150 + Math.random() * 700;
@@ -618,7 +715,12 @@ export function spawnPowerSynth(x: number, y: number): PowerSynthState {
     }
   })();
 
-  makeDraggable(el, { onErase: () => removePowerSynth(powerSynth) });
+  makeDraggable(el, {
+    onErase: () => removePowerSynth(powerSynth),
+    onTap: () => {
+      if (!powerSynth.autoplay) triggerNote();
+    },
+  });
   bindPowerSynthContextMenu(powerSynth);
 
   SOUND.powersynths.push(powerSynth);

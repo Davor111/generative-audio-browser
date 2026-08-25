@@ -1,4 +1,5 @@
 import { createEditor, fmt } from './editor';
+import { noteFields } from './note-fields';
 import type { DeepPadState } from '../types';
 
 const editor = createEditor<DeepPadState>({
@@ -10,6 +11,12 @@ const editor = createEditor<DeepPadState>({
   width: '340px',
   sections: [
     {
+      // Deep Pad is the bass voice, so its octave range starts lower.
+      title: 'Notes',
+      fields: noteFields<DeepPadState>({ minOctave: 0, maxOctave: 4, maxRange: 3 }),
+    },
+    {
+      title: 'Voice',
       fields: [
         {
           name: 'waveform',
